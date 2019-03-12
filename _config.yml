@@ -13,14 +13,17 @@
 # you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
-title: 写给自己
+
+title: Salutation to the dawn
+author: Paul
 email: a346285234@163.com
 description: >- # this means to ignore newlines until "baseurl:"
-  简单。
+  Look to this day! For it is life, the very life of life. In its brief course Lie all the verities and realities of your existence: The bliss of growth The glory of action The splendour of achievement For yesterday is but a dream And tomorrow only a vision But today well lived makes every yesterday a dream of happiness And every tomorrow a vision of hope. Look well therefore to this day! Such is the salutation to the dawn.
+
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
-twitter_username: nil
-github_username:  346285234
+twitter_username:
+github_username:
 
 # Build settings
 markdown: kramdown
