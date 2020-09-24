@@ -1,6 +1,6 @@
 ---
+layout: post
 title: 远见
-categories: Life
 ---
 
 

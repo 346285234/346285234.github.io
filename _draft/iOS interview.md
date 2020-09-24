@@ -1,4 +1,5 @@
 ---
+layout: post
 title: iOS面试题
 ---
 

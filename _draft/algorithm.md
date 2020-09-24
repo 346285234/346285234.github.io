@@ -1,6 +1,7 @@
 ---
+layout: post
 title: 算法导论
-categories: Develop
+categoires: Develop
 ---
 
 
