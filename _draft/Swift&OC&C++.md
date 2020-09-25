@@ -196,3 +196,12 @@ for (int i = 0; i < 2; i++) cout<<i; // inside i = 2 before leave scope
 cout<<i; // outside i = 0
 ```
 
+### Class
+
+```
+struct A {
+	A() = default; //default constructor
+	A(int i);
+}
+```
+

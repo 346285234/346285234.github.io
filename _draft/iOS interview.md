@@ -9,7 +9,6 @@ title: iOS面试题
 
 先做有答案的题目。
 
-## Language
 
 
 ## UI
@@ -20,19 +19,45 @@ drawRect绘制
 
 #### UIView和CALayer？
 
+## Language
+
+id vs instancetype?
+
+1. id在编译时不知道真实类型，instancetype知道，可以让编译器报警告。
+2. id还可以定义变量，instancetype只能用做返回值类型。
+
+weak vs assign？
+
+1. 都表示一种非拥有关系，但是weak在对象销毁时会置为nil
+2. assign可以用于非OC对象和类似CGFloat等简单OC对象，weak必须用于OC对象
+
+copy？
+
+* 怎么用copy关键字？
+
+  1. block使用copy
+
+  2. NSString，NSArry， NSDictionary等使用copy
+
+     因为NSString, NSArray, NSDictionary都有对应的可变类型NSMutableString, NSMutableArray, NSMutableDictionary，copy可以生一份不可修改的备份，防止被修改
+
+* 如何让自己的类用copy修饰？如何重写带copy关键字的setter？
+
+## Runtime
+
+## Memory
+
+## Block
+
 ## 多线程
 
 #### 多线程？
 
 #### block?循环引用？
 
-## 架构
+## RunLoop
 
-#### MVVM？
-
-view和model解耦，view和model关系被放在viewmodel中，所以view和model可以重用。
-
-## 网络
+##网络
 
 #### get和post？
 
@@ -41,9 +66,15 @@ view和model解耦，view和model关系被放在viewmodel中，所以view和mode
 3. get暴露请求，post安全
 4. get url长度有限，post长度不受限制
 
+## 设计模式
 
+#### MVVM？
 
+view和model解耦，view和model关系被放在viewmodel中，所以view和model可以重用。
 
+## 架构
+
+##算法
 
 ## 第三方库
 
