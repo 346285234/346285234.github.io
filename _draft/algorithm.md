@@ -5,19 +5,6 @@ categoires: Develop
 ---
 
 
-
-实际问题：把一张牌插入已经排好序的扑克牌
-
-抽象：插入排序
-
-
-
-实际问题：把两堆已经排好序的扑克牌做merge
-
-抽象：分治排序
-
-
-
 实际问题：给你一组股票数据，什么时候买入什么时候卖出收益最大
 
 抽象：最大子数组问题
@@ -57,11 +44,19 @@ T(n)=7T(n/2)+O(n^2)=>T(n)=O(n^lg7)
 
 
 ## 排序算法
+### 比较排序
 
-最大堆（parent>=children），最小堆(parent<=children)
+#### 插入排序
 
-堆排序-O(nlgn)
+理解：把一张牌插入已经排好序的扑克牌
 
+#### 分治排序
+
+理解： 把两堆已经排好序的扑克牌做merge
+
+#### 堆排序
+
+O(nlgn) (最大堆（parent>=children），最小堆(parent<=children))
 ```
 heapsort(A) {
 	Build_max_heap(A) // 构建最大堆
@@ -73,3 +68,42 @@ heapsort(A) {
 }
 ```
 
+#### 快速排序
+
+O(nlgn) 最坏情况O(n^2)
+```
+quickSort(A, p, r)
+	if p < r
+		q = partition(A, p, r)
+		quickSort(A, p, q-1)
+		quickSort(A, q+1, r)
+		
+partition(A, p, r)
+	x = A[r]
+	i = p-1
+	for j = p to r-1
+		if A[j]<=x
+			i=i+1
+			exchange A[i] with A[j]
+	exchange A[i+1] with A[r]
+	return i+1
+```
+
+###计数排序
+
+####
+
+```
+counting-sort(A, B, k)
+	let C[0..k] be a new array // c temp array
+	for i=0 to k
+		C[i] = 0
+	for j=1 to A.length
+		C[A[j]] = C[A[j]] + 1
+	for i=1 to k
+		c[i] += c[i-1]
+	for j=A.length downto 1
+		B[C[A[j]]] = A[j]
+		C[A[j]] -= 1
+```
+## 数据结构
