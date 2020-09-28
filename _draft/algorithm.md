@@ -5,6 +5,13 @@ categoires: Develop
 ---
 
 
+
+left question：递归与非递归方法？
+
+
+
+
+
 实际问题：给你一组股票数据，什么时候买入什么时候卖出收益最大
 
 抽象：最大子数组问题
@@ -91,7 +98,7 @@ partition(A, p, r)
 
 ###计数排序
 
-####
+O(n)
 
 ```
 counting-sort(A, B, k)
@@ -106,4 +113,14 @@ counting-sort(A, B, k)
 		B[C[A[j]]] = A[j]
 		C[A[j]] -= 1
 ```
+
+### 基数排序
+
+分解成d位数，每位采用合适的排序方法(如计数排序)
+
+```
+Radix-Sort(A, d)
+	use a stable sort to sort arry A on digit i
+```
+
 ## 数据结构
