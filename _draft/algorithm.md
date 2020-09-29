@@ -96,7 +96,9 @@ partition(A, p, r)
 	return i+1
 ```
 
-###计数排序
+### 非比较排序
+
+####计数排序
 
 O(n)
 
@@ -114,7 +116,7 @@ counting-sort(A, B, k)
 		C[A[j]] -= 1
 ```
 
-### 基数排序
+#### 基数排序
 
 分解成d位数，每位采用合适的排序方法(如计数排序)
 
@@ -122,5 +124,10 @@ counting-sort(A, B, k)
 Radix-Sort(A, d)
 	use a stable sort to sort arry A on digit i
 ```
+
+#### 桶排序
+
+使用于数据位于[0,1), 将数据插入n个桶（类似计数排序），然后在对桶进行比较排序。
+
 
 ## 数据结构
