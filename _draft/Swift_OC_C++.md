@@ -4,6 +4,21 @@ title: Swift&OC&C++
 category: Develop
 ---
 
+｜Language | C++ | OC | Swift |
+| ----- | -----  | ---  | ---  |
+｜ 基本类型 ｜bool, char, int,  float, double ｜  ｜  ｜
+｜ 字符串 ｜  ｜  ｜  ｜
+｜ 数组 ｜  ｜  ｜  ｜
+｜ 枚举 ｜  ｜  ｜  ｜
+｜ if ｜  ｜  ｜  ｜
+｜ for ｜  ｜  ｜  ｜
+｜ while ｜  ｜  ｜  ｜
+｜异常｜  ｜  ｜  ｜
+| 变量定义 | int a; | id a; | var a |
+|          |        |       |       |
+| 函数定义 ｜  ｜  ｜  ｜
+｜类定义 ｜  ｜  ｜  ｜  ｜
+
 
 
 ## Swift
