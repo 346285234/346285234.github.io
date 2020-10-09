@@ -624,15 +624,121 @@ dispatch_barrier_async
 
 事件循环： 没有消息休眠（用户态->内核态），有消息立刻唤醒（内核态->用户态）
 
+之所以可以休眠而不是死循环，是由于run会调用系统的mach_msg(), 切换到内核态，
+
+之所以唤醒，是由于mach_msg在一定条件(source1等), 会唤醒runloop，返回用户态
+
 ### 数据结构
+
+1. CFRunLoop
+2. CFRunLoopMode
+3. souce/timer/observer
 
 ### 事件循环机制
 
+![process](./iOS_interview_image/runloop_process.png)
+
 ### RunLoop与NSTimer
+
+苹果mode name:
+
+1. defaultmode
+2. uitrackingmode
+3. commonmode
+
+将defaultmode和uitrackingmode加入runloop的commonmode（系统预置），timer加入commonmodeitems，timer会自动同步到各个commonmode下，可以使timer在多个mode下运行。
 
 ###RunLoop与多线程
 
+1. 一一对应
+2. 主线程自动开启，非主线程手动开启
+
+
+
+点击图标，程序启动，运行，到程序被杀死，内部过程？
+
+1. runloop开启：main函数运行，内部会调用UIApplicationMain，在这里面会启动主线程的runloop
+2. runloop运行：经过一系列的处理，runloop休眠，如果这时我们点击主屏幕，会产生MachPort，然后转化成source1，把主线程唤醒，处理事件
+3. runloop结束：当程序被杀死，进入runloop的退出，observer会接收到通知，runloop关闭后，线程被销毁
+
+如何实现一个常驻线程？
+
+1. 为当前线程开启一个runloop
+2. 向runloop中添加一个port/source等维持runloop事件循环
+3. 启动runloop
+
 ##网络
+
+###http协议
+
+request和reponse格式
+
+1. request: 请求行， 消息头， 消息体
+2. response：状态行，消息头，消息体
+
+request类型：get, post, head, put, delete, options
+
+get vs post
+
+1. get用于获取资源，post用于处理资源
+2. get请求参数在url，post在body
+3. get参数有限制，post没有限制
+4. get请求不安全，post安全
+
+状态码
+
+![statuscode](./iOS_interview_image/response_statuscode.png)
+
+建立连接
+
+![http_connect](./iOS_interview_image/http_process.png)
+
+http特点
+
+1. 无连接 -> http持久连接，头部字段：（Connection： keep-alive, time: 20(多少时间), max: 10（多少条请求）)
+2. 无状态 -> Cookie/Session
+
+###https与网络安全
+
+https = http + ssl/tls
+
+https连接流程
+
+![https_process](./iOS_interview_image/https_process.png)
+
+
+
+###tcp/udp
+
+传输层。
+
+udp特点:
+
+1. 无连接
+2. 不保证可靠
+3. 面向报文：不合并不拆分
+
+
+
+复用、分用
+
+差错检测
+
+
+
+tcp特点：
+
+1. 面向连接
+2. 可靠
+3. 面向字节流
+4. 流量控制
+5. 拥塞控制 
+
+###dns解析
+
+###session/cookie
+
+
 
 #### get和post？
 
@@ -640,6 +746,15 @@ dispatch_barrier_async
 2. get无请求体，post有
 3. get暴露请求，post安全
 4. get url长度有限，post长度不受限制
+
+如何判断请求结束？
+
+1. Content-length
+2. chunked，最后一个package是空的chunked
+
+charles抓包原理？
+
+中间人攻击。
 
 ## 设计模式
 
