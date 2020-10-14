@@ -20,13 +20,13 @@ title: iOS面试题
    1. 并发访问，数据拷贝：记录数据操作，在拷贝数据中也执行一次
    2. 串行访问
 
-### (1)事件传递&视图响应
+### (T)(1)事件传递&视图响应
 
 传递： UIApplication->UIWindow->UIView, 通过hitTest和pointinside判断，hidden、alpha、userinteractionisenable可以用来屏蔽视图传递。
 
 响应：如果传递到的视图UIResponse相关的touchbegin、touchmove、touchend不响应，则交给父视图，如果都没有响应，则丢弃这个事件。
 
-#### UIView和CALayer？
+#### (T)UIView和CALayer？
 
 UIView内部有一个layer成员，UIView用于事件的传递和响应，CALayer用于视图显示，这里面体现了单一职责的设计原则。
 
@@ -170,6 +170,12 @@ setAssociatedObject
 
 removeAssociatedObjects
 
+
+
+关联对象不需要在dealloc释放无论ARC还是MRC都会在dealloc后自动解除关联对象。
+
+
+
 ### 代理 vs 通知
 
 代理：
@@ -229,6 +235,11 @@ assign vs weak:
 2. assign和weak不改变引用计数
 
 3. assign可能产生悬挂指针，weak释放自动置为nil
+
+怎么用copy？
+
+1. NSString, NSArray, NSDictionary等因为有对应的Mutable类型，经常用copy。
+2. block用copy，block原来在栈区通过copy拷到堆区。
 
 浅拷贝 vs 深拷贝？
 
@@ -352,7 +363,16 @@ const char* types
 2. 逐级往上
 3. 在根类对象寻找，如果还没有，返回nil
 
+objc对象的内存布局？（非TaggedPointer对象）
+
+1. isa指针
+2. 所有父类和自己的实例变量
+
 ###(1)消息传递
+
+objc_msgSend 消息传递，
+
+_objc_msgForward 消息转发。
 
 ![message](./iOS_interview_image/message_send.png)
 
@@ -399,6 +419,10 @@ super只是从父类开始查，最后还是在NSObject中找到class方法，�
 
 ### 消息转发
 
+1. +resolveInstanceMethod, 动态添加方法，消息会被重新发送。
+2. fast转发给其他对象
+3. normal转发，先通过methodSignatureForSelector判断函数参数和返回值，然后通过forwardInvocation转发给目标对象。
+
 ![message_forward](./iOS_interview_image/message_forward.png)
 
 
@@ -409,11 +433,21 @@ super只是从父类开始查，最后还是在NSObject中找到class方法，�
 
 exchangeImplementations
 
-### 动态添加方法
+### 动态添加
 
-performSelector
+动态添加类
+
+objc_allocateClassPair
+
+往动态类里添加实例变量
+
+class_addIvar
+
+往动态类添加实例方法
 
 class_addMethod
+
+
 
 ###动态方法解析
 
@@ -472,6 +506,12 @@ sidetable包含：
 
 ARC: 自动管理，编译器和runtime协作，不能使用手动管理关键词，增加weak,strong关键词
 
+
+
+ARC通过什么方式帮助管理内存？
+
+在编译期，在底层接口实现retain/release/autorelease； 在运行期，通过weak自动释放等管理内存。
+
 ### 引用计数
 
 retainCount = 存在数据结构中的引用计数+1， 所以尽管alloc不调用retain，retainCount=1.
@@ -510,13 +550,17 @@ dealloc ->... ->weak_clear_no_lock
 
 因为timer会被runloop强引用，所以可以在NSTimer和vc间增加中间对象，在每次触发定时器时判断如果vc释放，则释放timer。
 
+
+
+objc使用什么机制管理对象内存？
+
+引用计数，每次runloop运行的时候，都会check retaincount，如果为零，则释放。
+
 ## Block
 
 ### (1)什么是block
 
 block是将函数及其上下文封装起来的对象。
-
-block调用即函数调用。
 
 ### 截获变量
 
@@ -530,7 +574,7 @@ block调用即函数调用。
 1. 对局部变量无论基本类型还是对象类型赋值都需要__block.
 2. 对静态局部、全局、静态全局变量赋值都不需要__block。
 
-__block修饰的变量变成了对象。
+__block修饰的变量变成了__struct对象, 地址被传入block。
 
 ###block内存管理
 
@@ -670,6 +714,10 @@ dispatch_barrier_async
 1. 为当前线程开启一个runloop
 2. 向runloop中添加一个port/source等维持runloop事件循环
 3. 启动runloop
+
+runloop mode的作用？
+
+model主要用来指定事件在运行循环中的优先级。
 
 ##网络
 
