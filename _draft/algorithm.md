@@ -8,7 +8,9 @@ categoires: Develop
 
 [toc]
 
-left question：递归与非递归方法？
+left question：递归与迭代方法？
+
+递归转迭代，需要回溯，用栈保存中间结果；不需要回溯，直接迭代。
 
 
 

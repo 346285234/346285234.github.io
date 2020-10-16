@@ -82,7 +82,7 @@ UIView绘制原理
 
 ![draw](./iOS_interview_image/draw_principle.png)
 
-setneedsdisplay只是打上标记，display是在当前runloop将要结束时被调用。
+setneedsdisplay只是打上标记，display是在runloop下一个绘制周期被调用。
 
 系统绘制流程
 
@@ -115,6 +115,13 @@ setneedsdisplay只是打上标记，display是在当前runloop将要结束时被
 为什么要避免离屏渲染？增加GPU工作量，可能会使CPU和GPU不能准时完成任务，最后产生掉帧卡顿。
 
 
+
+###电量优化？
+
+1. CPU和GPU
+2. 定位：降低精确度，及时关闭
+3. 网络：一次性下载数据，多用缓存
+4. 蓝牙陀螺仪等硬件：按需使用
 
 ## OC语言特性
 
@@ -269,6 +276,8 @@ copy？
      因为NSString, NSArray, NSDictionary都有对应的可变类型NSMutableString, NSMutableArray, NSMutableDictionary，copy可以生一份不可修改的备份，防止被修改
 
 * 如何让自己的类用copy修饰？如何重写带copy关键字的setter？
+
+
 
 ## Runtime
 
@@ -970,8 +979,6 @@ SessionManager的单例default设置SessionDelegate为URLSession的delegate。
 当complete回调返回时，先执行所有的validations，如果失败则保存error到request，当回调到taskdelegate，如果有error则结束，如果没有，不再挂起queue，response将responseData通过block回调。
 
 ### SDWebImage?
-
-
 
 #### 支付宝等sdk集成？
 
