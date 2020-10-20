@@ -151,3 +151,4 @@ Radix-Sort(A, d)
 二叉搜索树: left < root < right, 中序，左序，右序遍历
 
 红黑树：一种平衡二叉树
+
