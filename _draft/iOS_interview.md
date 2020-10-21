@@ -120,39 +120,22 @@ setneedsdisplay只是打上标记，display是在当前runloop将要结束时被
 
 ###分类 vs 扩展
 
-分类
+1. 分类运行时添加，类扩展编译时， 所以分类没有实现不会警告
+2. 分类可以对系统类添加分类
+3. 分类可以添加方法、属性，类扩展可以添加方法、属性、实例变量
+4. 类扩展在.m中
 
-特点：
-
-1. 运行时添加
-2. 可以对系统类添加分类
-
-作用：
+分类作用：
 
 1. 声明私有方法
 2. 按不同的功能分解类
 3. 把framework私有方法公开
-
-可以添加：
-
-1. 实例方法
-2. 类方法
-3. 属性
-4. 协议
 
 易错点：
 
 1. 分类添加的方法可以“覆盖”原类方法
 2. 同名分类方法后编译的先生效
 3. 名字相同的分类会引起编译报错
-
-扩展
-
-特点：
-
-1. 编译时决定
-2. 只以声明形式存在，多数情况寄生于宿主类
-3. 不能为系统类添加扩展
 
 ###关联对象
 
@@ -536,15 +519,19 @@ dealloc ->... ->weak_clear_no_lock
 
 ### 自动释放池
 
->App启动后，苹果在主线程 RunLoop 里注册了两个 Observer，其回调都是 _wrapRunLoopWithAutoreleasePoolHandler()。
->
->第一个 Observer 监视的事件是 Entry(即将进入Loop)，其回调内会调用 _objc_autoreleasePoolPush() 创建自动释放池。其 order 是-2147483647，优先级最高，保证创建释放池发生在其他所有回调之前。
->
->第二个 Observer 监视了两个事件： BeforeWaiting(准备进入休眠) 时调用_objc_autoreleasePoolPop() 和 _objc_autoreleasePoolPush() 释放旧的池并创建新池；Exit(即将退出Loop) 时调用 _objc_autoreleasePoolPop() 来释放自动释放池。这个 Observer 的 order 是 2147483647，优先级最低，保证其释放池子发生在其他所有回调之后。
+####自动释放池怎么释放？*或* 与runloop关系？
+
+App启动后，苹果在主线程 RunLoop 里注册了两个 Observer
+第一个 Observer是 监听Entry，用来创建自动释放池。优先级最高，保证创建释放池发生在其他所有回调之前。
+第二个 Observer 监视了两个事件： BeforeWaiting 时 释放旧池创建新池；Exit时释放自动释放池。这个 Observer 的 优先级最低，保证其释放池子发生在其他所有回调之后。
+
+####自动释放池原理？
 
 autoreleasepool是一张双向链表，每一个结点是autoreleasepoolpage，每次push先判断栈是否满，未满，插入一个哨兵，返回哨兵地址，然后添加对象，满则插入一个新page，每次pop，把到哨兵前的对象release。
 
-不同的线程有不同的autoreleasepool。
+
+
+注：不同的线程有不同的autoreleasepool。
 
 ### 循环引用
 
