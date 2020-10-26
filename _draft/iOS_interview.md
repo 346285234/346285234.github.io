@@ -725,7 +725,7 @@ dispatch_barrier_async
 
 1. CFRunLoop
 2. CFRunLoopMode
-3. souce/timer/observer
+3. souce/timer/observer: source0触摸事件，source1 port事件
 
 ### (1)事件循环机制
 
