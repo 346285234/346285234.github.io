@@ -13,24 +13,17 @@ title: iOS面试题
 
 ## UI
 
-### UITableView相关
-
-1. 重用机制: 离开屏幕的cell并没有释放掉，而是被加入重用池中，当请求新的cell时从重用池取出。
-2. 多线程数据源同步
-   1. 并发访问，数据拷贝：记录数据操作，在拷贝数据中也执行一次
-   2. 串行访问
-
-### (1)事件传递&视图响应
+### 事件传递&视图响应
 
 传递： UIApplication->UIWindow->UIView, 通过hitTest和pointinside判断，hidden、alpha、userinteractionisenable可以用来屏蔽视图传递。
 
 响应：如果传递到的视图UIResponse相关的touchbegin、touchmove、touchend不响应，则交给父视图，如果都没有响应，则丢弃这个事件。
 
-#### (T)UIView和CALayer？
+#### UIView和CALayer？
 
 UIView内部有一个layer成员，UIView用于事件的传递和响应，CALayer用于视图显示，这里面体现了单一职责的设计原则。
 
-###(1)图像显示原理
+###图像显示原理
 
 总结：CPU得到位图，通过总线传给GPU渲染，然后保存到帧缓冲区，视频控制器根据信号从帧缓冲区提取内容显示到显示器。
 
@@ -64,17 +57,25 @@ gpu(了解)
 
 如果在信号到来时，CPU和GPU不能完成完成任务，就会掉帧。
 
-如何优化？
+
+
+####如何优化？ *或*  TableView如何优化？ 
 
 1. CPU
-   1. 在子线程对对象创建、修改、删除
+   1. 对象在子线程创建、修改、删除
    2. 在子线程预排版（布局和文本计算）
    3. 预渲染（文本等异步绘制，图片编解码等）
 2. GPU
-   1. 纹理渲染方面，减少离屏渲染，即减少layer的圆角，masktobounds，阴影蒙层
+   1. 纹理渲染方面，减少离屏渲染，即：
+      1. 圆角+maskToBounds
+      2. 图层蒙版(mask)
+      3. 阴影(shadow)
+      4. 光栅化 
    2. 视图混合方面，简化视图层级
 
 
+
+注： 离屏渲染：GPU在当前屏幕缓冲区以外新开辟一块空间用于渲染，在GPU面临瓶颈时，可以将一部分交给CPU完成，但是CPU的渲染能力远不如GPU高效，所以一般不推荐使用。
 
 ### 绘制原理&异步绘制
 
@@ -99,53 +100,29 @@ setneedsdisplay只是打上标记，display是在runloop下一个绘制周期被
 
 
 
-###离屏渲染
-
-在屏渲染：GPU的渲染是在当前显示缓冲区中进行
-
-离屏渲染：GPU在当前屏幕缓冲区以外新开辟一块空间用于渲染，在GPU面临瓶颈时，可以将一部分交给CPU完成，但是CPU的渲染能力远不如GPU高效，所以一般不推荐使用。
-
-何时触发离屏渲染？
-
-1. 圆角+maskToBounds
-2. 图层蒙版(mask)
-3. 阴影(shadow)
-4. 光栅化 
-
-为什么要避免离屏渲染？增加GPU工作量，可能会使CPU和GPU不能准时完成任务，最后产生掉帧卡顿。
-
-
-
 ###电量优化？
 
-1. CPU和GPU
+1. CPU和GPU优化
 2. 定位：降低精确度，及时关闭
 3. 网络：一次性下载数据，多用缓存
 4. 蓝牙陀螺仪等硬件：按需使用
+
+
 
 ## OC语言特性
 
 ###分类 vs 扩展
 
-分类
+1. 分类运行时添加，类扩展编译时， 所以分类没有实现不会警告
+2. 分类可以对系统类添加分类
+3. 分类可以添加方法、属性，类扩展可以添加方法、属性、实例变量
+4. 类扩展在.m中
 
-特点：
-
-1. 运行时添加
-2. 可以对系统类添加分类
-
-作用：
+分类作用：
 
 1. 声明私有方法
 2. 按不同的功能分解类
 3. 把framework私有方法公开
-
-可以添加：
-
-1. 实例方法
-2. 类方法
-3. 属性
-4. 协议
 
 易错点：
 
@@ -153,23 +130,17 @@ setneedsdisplay只是打上标记，display是在runloop下一个绘制周期被
 2. 同名分类方法后编译的先生效
 3. 名字相同的分类会引起编译报错
 
-扩展
-
-特点：
-
-1. 编译时决定
-2. 只以声明形式存在，多数情况寄生于宿主类
-3. 不能为系统类添加扩展
-
 ###关联对象
-
-可以为分类添加实例变量。
 
 关联对象的本质：
 
 关联对象由AssociationsManager管理，对象上所有关联对象会被保存到一个AssociationMap, 然后存入一个全局的AssociationsHashMap.
 
-主要函数： 
+作用：可以为分类添加实例变量。
+
+
+
+函数： 
 
 getAssociatedObject
 
@@ -179,29 +150,23 @@ removeAssociatedObjects
 
 
 
-关联对象不需要在dealloc释放无论ARC还是MRC都会在dealloc后自动解除关联对象。
+注：关联对象不需要在dealloc释放无论ARC还是MRC都会在dealloc后自动解除关联对象。
 
 
 
 ### 代理 vs 通知
 
-代理：
+1. 代理模式， 观察者模式
+2. 代理一对一， 通知一对多
+3. 代理借助协议实现， 需要注意循环引用
 
-1. 代理模式
-2. 一对一
-3. 借助协议实现
 
-委托者拥有weak delegate，避免循环引用。
 
-通知：
-
-跨层传递。
-
-如何实现通知机制？
+####通知实现原理？
 
 保存一张Map表，key为观察的notificationname，value为一个结构体包含观察的对象和回调的函数，利用观察者模式实现。
 
-### (1)KVO & KVC
+### KVO & KVC
 
 KVO：key-value observing, 观察者模式，通过isa-swizzling（动态创建新子类，重写setter方法，修改isa指针）实现。
 
@@ -229,7 +194,7 @@ setValue:forKey
 2. 如果没有实现accessInstanceVariablesDirectly, 则判断实例变量(key, _key)或相似的实例变量( _isKey, _isKey)是否存在
 3. 调用get或set的undefinedkey函数
 
-###(1)属性关键字
+###属性关键字
 
 1. 读写: readwrite(default), readonly
 2. 原子: atomic(default, get, set线程安全，但是对数组的add，remove等不保证线程安全), nonatomic
@@ -243,7 +208,9 @@ assign vs weak:
 
 3. assign可能产生悬挂指针，weak释放自动置为nil
 
-怎么用copy？
+   
+
+#### 怎么用copy？
 
 1. NSString, NSArray, NSDictionary等因为有对应的Mutable类型，经常用copy。
 2. block用copy，block原来在栈区通过copy拷到堆区。
@@ -253,11 +220,15 @@ assign vs weak:
 1. 浅拷贝增加引用计数，指向同一块地址
 2. 深拷贝不会增加引用计数，指向新开辟的内容相同的内存空间
 
+如何让自己的类用copy修饰？如何重写带copy关键字的setter？
+
+实现NSCopying， copyWithZone方法。
+
 ![copy](./iOS_interview_image/copy_mutablecopy.png)
 
 
 
-MRC下retain修饰setter方法？
+####MRC下retain修饰setter方法？
 
 ```
 @property (nonatomic, retain) id obj;
@@ -269,30 +240,41 @@ MRC下retain修饰setter方法？
 }
 ```
 
-
-
-id vs instancetype?
+####id vs instancetype?
 
 1. id在编译时不知道真实类型，instancetype知道，可以让编译器报警告。
 2. id还可以定义变量，instancetype只能用做返回值类型。
-
-copy？
-
-* 怎么用copy关键字？
-
-  1. block使用copy
-
-  2. NSString，NSArry， NSDictionary等使用copy
-
-     因为NSString, NSArray, NSDictionary都有对应的可变类型NSMutableString, NSMutableArray, NSMutableDictionary，copy可以生一份不可修改的备份，防止被修改
-
-* 如何让自己的类用copy修饰？如何重写带copy关键字的setter？
 
 
 
 ## Runtime
 
-### (1)数据结构
+### 类对象与元类对象
+
+类对象和元类对象类型都是objc_class,
+
+1. 类对象存储实例成员、方法
+2. 元类对象存储类成员、方法
+
+![class_metaclass](./iOS_interview_image/class_metaclass.png)
+
+实例方法查找过程：
+
+1. 类对象中寻找
+2. 逐级往上，直到nil
+
+类方法查找过程：
+
+1. 元类对象中寻找
+2. 逐级往上
+3. 在根类对象寻找，如果还没有，返回nil
+
+实例对象的内存布局？（非TaggedPointer对象）
+
+1. isa指针
+2. 所有父类和自己的实例变量
+
+### 数据结构
 
 ![struct](./iOS_interview_image/runtime_struct.png)
 
@@ -352,32 +334,9 @@ const char* types
 
 返回值 + 参数1 + ...(第一，第二个参数固定@：，表示self的id类型和方法的SEL类型)
 
-### (1)类对象与元类对象
+2. 
 
-类对象和元类对象类型都是objc_class,
-
-1. 类对象存储实例成员、方法
-2. 元类对象存储类成员、方法
-
-![class_metaclass](./iOS_interview_image/class_metaclass.png)
-
-实例方法查找过程：
-
-1. 类对象中寻找
-2. 逐级往上，直到nil
-
-类方法查找过程：
-
-1. 元类对象中寻找
-2. 逐级往上
-3. 在根类对象寻找，如果还没有，返回nil
-
-objc对象的内存布局？（非TaggedPointer对象）
-
-1. isa指针
-2. 所有父类和自己的实例变量
-
-###(1)消息传递
+###消息传递
 
 objc_msgSend 消息传递，
 
@@ -429,7 +388,7 @@ super只是从父类开始查，最后还是在NSObject中找到class方法，�
 ### 消息转发
 
 1. +resolveInstanceMethod, 动态添加方法，消息会被重新发送。
-2. fast转发给其他对象
+2. fast转发， 通过forwardingTargeForSelector给其他对象
 3. normal转发，先通过methodSignatureForSelector判断函数参数和返回值，然后通过forwardInvocation转发给目标对象。
 
 ![message_forward](./iOS_interview_image/message_forward.png)
@@ -438,7 +397,7 @@ super只是从父类开始查，最后还是在NSObject中找到class方法，�
 
 ### method-swizzling
 
-交换方法实现。
+同一SEL，交换IMP。
 
 exchangeImplementations
 
@@ -460,11 +419,22 @@ class_addMethod
 
 ###动态方法解析
 
-@dynamic
+@dynamic： 属性的setter与getter用户实现，不自动生成
 
 运行时语言
 
 编译时语言
+
+
+
+### main之前？
+
+1. 加载dyld（动态链接器），配合ImageLoader将二进制文件加载到内存
+2. 开启缓存策略，dyld加载依赖库包括libobjc(objc和runtime)和libSystem(GCD,block,C语言，加密库)，动态链接并初始化
+3. 到可执行程序初始化，runtime对所有类初始化调用load，由于lazy bind机制，依赖库多数在使用时才初始化类结构
+4. 所有初始化结束，调用main
+
+
 
 ## Memory
 
@@ -545,15 +515,19 @@ dealloc ->... ->weak_clear_no_lock
 
 ### 自动释放池
 
->App启动后，苹果在主线程 RunLoop 里注册了两个 Observer，其回调都是 _wrapRunLoopWithAutoreleasePoolHandler()。
->
->第一个 Observer 监视的事件是 Entry(即将进入Loop)，其回调内会调用 _objc_autoreleasePoolPush() 创建自动释放池。其 order 是-2147483647，优先级最高，保证创建释放池发生在其他所有回调之前。
->
->第二个 Observer 监视了两个事件： BeforeWaiting(准备进入休眠) 时调用_objc_autoreleasePoolPop() 和 _objc_autoreleasePoolPush() 释放旧的池并创建新池；Exit(即将退出Loop) 时调用 _objc_autoreleasePoolPop() 来释放自动释放池。这个 Observer 的 order 是 2147483647，优先级最低，保证其释放池子发生在其他所有回调之后。
+####自动释放池怎么释放？*或* 与runloop关系？
+
+App启动后，苹果在主线程 RunLoop 里注册了两个 Observer
+第一个 Observer是 监听Entry，用来创建自动释放池。优先级最高，保证创建释放池发生在其他所有回调之前。
+第二个 Observer 监视了两个事件： BeforeWaiting 时 释放旧池创建新池；Exit时释放自动释放池。这个 Observer 的 优先级最低，保证其释放池子发生在其他所有回调之后。
+
+####自动释放池原理？
 
 autoreleasepool是一张双向链表，每一个结点是autoreleasepoolpage，每次push先判断栈是否满，未满，插入一个哨兵，返回哨兵地址，然后添加对象，满则插入一个新page，每次pop，把到哨兵前的对象release。
 
-不同的线程有不同的autoreleasepool。
+
+
+注：不同的线程有不同的autoreleasepool。
 
 ### 循环引用
 
