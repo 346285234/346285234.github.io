@@ -14,11 +14,11 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: 放下过去，奔向新生命
+title: 时间魔术师
 author: qchen
 email: a346285234@163.com
 description: >- # this means to ignore newlines until "baseurl:"
-  士夫业已屈首受书，而不能以取尊荣，虽多亦奚以为！
+  电脑只是工具，人要学会使用工具，而不是被工具使用。
 
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
