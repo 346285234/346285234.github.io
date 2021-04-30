@@ -3,115 +3,117 @@ layout: post
 title: iOS面试题
 ---
 
+- [iOS知识点](#ios知识点)
+	- [语言特性](#语言特性)
+		- [分类 vs 扩展](#分类-vs-扩展)
+		- [关联对象](#关联对象)
+		- [代理 vs 通知](#代理-vs-通知)
+			- [通知实现原理？](#通知实现原理)
+		- [KVO & KVC](#kvo--kvc)
+		- [属性关键字](#属性关键字)
+			- [怎么用copy？](#怎么用copy)
+			- [MRC下retain修饰setter方法？](#mrc下retain修饰setter方法)
+			- [id vs instancetype?](#id-vs-instancetype)
+		- [Swift语言特性](#swift语言特性)
+	- [内存](#内存)
+		- [(1)内存布局](#1内存布局)
+		- [(1)内存管理方案](#1内存管理方案)
+		- [ARC & MRC](#arc--mrc)
+		- [引用计数](#引用计数)
+		- [(1)弱引用](#1弱引用)
+		- [自动释放池](#自动释放池)
+			- [自动释放池怎么释放？*或* 与runloop关系？](#自动释放池怎么释放或-与runloop关系)
+			- [自动释放池原理？](#自动释放池原理)
+		- [循环引用](#循环引用)
+		- [如何检查内存问题？原理是什么？](#如何检查内存问题原理是什么)
+		- [Swift对象内存模型](#swift对象内存模型)
+	- [Block](#block)
+		- [(1)什么是block](#1什么是block)
+		- [截获变量](#截获变量)
+		- [__block修饰符](#__block修饰符)
+		- [block内存管理](#block内存管理)
+		- [(1)block的循环引用](#1block的循环引用)
+	- [Runtime](#runtime)
+		- [类对象与元类对象](#类对象与元类对象)
+		- [数据结构](#数据结构)
+		- [消息传递](#消息传递)
+			- [以下代码，输出什么？](#以下代码输出什么)
+		- [方法缓存](#方法缓存)
+		- [消息转发](#消息转发)
+		- [method-swizzling](#method-swizzling)
+		- [动态添加](#动态添加)
+		- [动态方法解析](#动态方法解析)
+		- [main之前？](#main之前)
+	- [多线程](#多线程)
+		- [GCD](#gcd)
+		- [NSOperation](#nsoperation)
+		- [NSThread](#nsthread)
+		- [多线程与锁](#多线程与锁)
+			- [多线程？](#多线程-1)
+			- [block?循环引用？](#block循环引用)
+		- [RunLoop](#runloop)
+			- [概念](#概念)
+			- [数据结构](#数据结构-1)
+			- [(1)事件循环机制](#1事件循环机制)
+			- [RunLoop与NSTimer](#runloop与nstimer)
+			- [RunLoop与多线程](#runloop与多线程)
+	- [UI](#ui)
+		- [事件传递和响应](#事件传递和响应)
+		- [图像显示原理](#图像显示原理)
+			- [卡顿&掉帧](#卡顿掉帧)
+			- [图像如何优化？TableView如何优化？](#图像如何优化tableview如何优化)
+			- [绘制原理&异步绘制](#绘制原理异步绘制)
+	- [网络](#网络)
+		- [http协议](#http协议)
+		- [https与网络安全](#https与网络安全)
+		- [tcp/udp](#tcpudp)
+		- [dns解析](#dns解析)
+		- [session/cookie](#sessioncookie)
+			- [get和post？](#get和post)
+	- [性能优化(Pending)](#性能优化pending)
+		- [电量优化？](#电量优化)
+	- [设计模式与架构](#设计模式与架构)
+			- [原则](#原则)
+		- [责任链](#责任链)
+		- [桥接](#桥接)
+		- [适配器](#适配器)
+		- [单例](#单例)
+		- [命令](#命令)
+		- [策略](#策略)
+		- [工厂](#工厂)
+		- [状态](#状态)
+		- [观察者](#观察者)
+		- [代理](#代理)
+		- [迭代器](#迭代器)
+		- [组合](#组合)
+		- [外观](#外观)
+		- [模版](#模版)
+		- [装饰者](#装饰者)
+		- [架构](#架构)
+			- [图片缓存？](#图片缓存)
+			- [阅读时长统计？](#阅读时长统计)
+			- [MVVM？](#mvvm)
+			- [组件化？](#组件化)
+	- [算法和数据结构](#算法和数据结构)
+		- [数据结构](#数据结构-2)
+			- [树](#树)
+		- [排序算法](#排序算法)
+		- [常见算法](#常见算法)
+	- [第三方库](#第三方库)
+		- [Alamofire?](#alamofire)
+		- [SDWebImage?](#sdwebimage)
+		- [JSBridge?](#jsbridge)
+		- [RxSwift(Pending)](#rxswiftpending)
+		- [PromiseKit(Pending)](#promisekitpending)
+	- [跨平台(Pending)](#跨平台pending)
+		- [Flutter](#flutter)
+		- [ReactiveNative](#reactivenative)
 
+# iOS知识点
 
-[toc]
+## 语言特性
 
-先做有答案的题目。
-
-
-
-## UI
-
-### 事件传递&视图响应
-
-传递： UIApplication->UIWindow->UIView, 通过hitTest和pointinside判断，hidden、alpha、userinteractionisenable可以用来屏蔽视图传递。
-
-响应：如果传递到的视图UIResponse相关的touchbegin、touchmove、touchend不响应，则交给父视图，如果都没有响应，则丢弃这个事件。
-
-#### UIView和CALayer？
-
-UIView内部有一个layer成员，UIView用于事件的传递和响应，CALayer用于视图显示，这里面体现了单一职责的设计原则。
-
-###图像显示原理
-
-总结：CPU得到位图，通过总线传给GPU渲染，然后保存到帧缓冲区，视频控制器根据信号从帧缓冲区提取内容显示到显示器。
-
-![display](./iOS_interview_image/whole_display.png)
-
-cpu和gpu
-
-![cpu&gpu](./iOS_interview_image/cpu_gpu_display.png)
-
-cpu
-
-![cpu](./iOS_interview_image/cpu_display.png)
-
-layout: 布局和文本计算
-
-display: 绘制
-
-prepare：图片编解码
-
-commit：提交位图
-
-gpu(了解)
-
-![gpu](./iOS_interview_image/gpu_display.png)
-
-
-
-###卡顿&掉帧
-
-60fps，即60帧每秒，即每16.7ms会有一个VSync信号
-
-如果在信号到来时，CPU和GPU不能完成完成任务，就会掉帧。
-
-
-
-####如何优化？ *或*  TableView如何优化？ 
-
-1. CPU
-   1. 对象在子线程创建、修改、删除
-   2. 在子线程预排版（布局和文本计算）
-   3. 预渲染（文本等异步绘制，图片编解码等）
-2. GPU
-   1. 纹理渲染方面，减少离屏渲染，即：
-      1. 圆角+maskToBounds
-      2. 图层蒙版(mask)
-      3. 阴影(shadow)
-      4. 光栅化 
-   2. 视图混合方面，简化视图层级
-
-
-
-注： 离屏渲染：GPU在当前屏幕缓冲区以外新开辟一块空间用于渲染，在GPU面临瓶颈时，可以将一部分交给CPU完成，但是CPU的渲染能力远不如GPU高效，所以一般不推荐使用。
-
-### 绘制原理&异步绘制
-
-UIView绘制原理
-
-![draw](./iOS_interview_image/draw_principle.png)
-
-setneedsdisplay只是打上标记，display是在runloop下一个绘制周期被调用。
-
-系统绘制流程
-
-![system](./iOS_interview_image/system_draw_process.png)
-
-(backing store 相当于bitmap）
-
-异步绘制流程
-
-1. layer.delegate生成bitmap
-2. 将bitmap赋给layer.contents
-
-![async_draw](./iOS_interview_image/async_draw_process.png)
-
-
-
-###电量优化？
-
-1. CPU和GPU优化
-2. 定位：降低精确度，及时关闭
-3. 网络：一次性下载数据，多用缓存
-4. 蓝牙陀螺仪等硬件：按需使用
-
-
-
-## OC语言特性
-
-###分类 vs 扩展
+### 分类 vs 扩展
 
 1. 分类运行时添加，类扩展编译时， 所以分类没有实现不会警告
 2. 分类可以对系统类添加分类
@@ -130,7 +132,7 @@ setneedsdisplay只是打上标记，display是在runloop下一个绘制周期被
 2. 同名分类方法后编译的先生效
 3. 名字相同的分类会引起编译报错
 
-###关联对象
+### 关联对象
 
 关联对象的本质：
 
@@ -162,7 +164,7 @@ removeAssociatedObjects
 
 
 
-####通知实现原理？
+#### 通知实现原理？
 
 保存一张Map表，key为观察的notificationname，value为一个结构体包含观察的对象和回调的函数，利用观察者模式实现。
 
@@ -194,7 +196,7 @@ setValue:forKey
 2. 如果没有实现accessInstanceVariablesDirectly, 则判断实例变量(key, _key)或相似的实例变量( _isKey, _isKey)是否存在
 3. 调用get或set的undefinedkey函数
 
-###属性关键字
+### 属性关键字
 
 1. 读写: readwrite(default), readonly
 2. 原子: atomic(default, get, set线程安全，但是对数组的add，remove等不保证线程安全), nonatomic
@@ -228,7 +230,7 @@ assign vs weak:
 
 
 
-####MRC下retain修饰setter方法？
+#### MRC下retain修饰setter方法？
 
 ```
 @property (nonatomic, retain) id obj;
@@ -240,12 +242,200 @@ assign vs weak:
 }
 ```
 
-####id vs instancetype?
+#### id vs instancetype?
 
 1. id在编译时不知道真实类型，instancetype知道，可以让编译器报警告。
 2. id还可以定义变量，instancetype只能用做返回值类型。
 
+### Swift语言特性
+1. Swift静态语言，类型在编译时决定，没有isa指针，所有类型被保存到静态空间，实例变量的第一个指针type指向对象类型。
+2. Swift所有都是对象。
 
+## 内存
+
+### (1)内存布局
+
+![memory](./iOS_interview_image/memory_layout.png)
+
+stack: 方法调用
+
+heap：alloc等分配的对象
+
+bss：未初始化的全局和静态变量
+
+data：已初始化的全局和静态变量
+
+### (1)内存管理方案
+
+1. TaggedPointer(适用于number等小对象， 没有isa，本身即是实际值+类型信息)
+2. NONPOINTER_ISA（优化的isa指针，保存更多信息）
+3. 散列表（当isa的extra_rc不足以保存时，会保存到引用计数表）
+
+
+
+NONPOINTER_ISA
+第一位表示是isa还是nonpointer_isa
+第二位表示是否有关联对象
+第三位表示是否有c++代码
+之后33位表示内存地址
+之后还有弱引用标记，引用是否存在散列表等
+
+![nonpointer_isa](./iOS_interview_image/nonpointer_isa_address_1.png)
+
+![nonpointer](./iOS_interview_image/nonpointer_isa_address_2.png)
+
+散列表
+
+sidetables：hash表，value为sidetable，通过对象找到对象所属的sidetable
+
+sidetable包含：
+
+1. 自旋锁：忙等锁，适合轻量访问
+2. 引用计数表：hash表，value结构：
+
+![reference_table](./iOS_interview_image/reference_hash_map.png)
+
+3. 弱引用表：hash表
+
+   ![weak table](./iOS_interview_image/weak_reference_hashmap.png)
+
+### ARC & MRC
+
+ MRC：手动管理，alloc, dealloc, **retain, release, retainCount, autorelease**
+
+ARC: 自动管理，编译器和runtime协作，不能使用手动管理关键词，增加weak,strong关键词
+
+
+
+ARC通过什么方式帮助管理内存？
+
+在编译时，接口内部自动添加retain/release/autorelease； 在运行时，帮助weak指针置空。
+
+### 引用计数
+
+retainCount = 存在数据结构中的引用计数+1， 所以尽管alloc不调用retain，retainCount=1.
+
+dealloc内部实现
+
+![dealloc](./iOS_interview_image/dealloc_process.png)
+
+### (1)弱引用
+
+添加weak变量过程
+
+id __weak a = b -> objc_initWeak(&a, b) ->storeWeak ->weak_register_no_lock
+
+在register函数中，会通过hash查找对象b的弱引用表，如果对象b weak表为空，创建一张新表，使第一个元素为指针a，其余为nil，不为空，直接添加新元素。
+
+清除weak变量，指针置为nil过程
+
+dealloc ->... ->weak_clear_no_lock
+
+在clear中，会通过hash查找当前对象对应的弱引用表，然后遍历，如果找到指针，置为nil。
+
+### 自动释放池
+
+#### 自动释放池怎么释放？*或* 与runloop关系？
+
+App启动后，苹果在主线程 RunLoop 里注册了两个 Observer
+第一个 Observer是 监听Entry，用来创建自动释放池。优先级最高，保证创建释放池发生在其他所有回调之前。
+第二个 Observer 监视了两个事件： BeforeWaiting 时 释放旧池创建新池；Exit时释放自动释放池。这个 Observer 的 优先级最低，保证其释放池子发生在其他所有回调之后。
+
+#### 自动释放池原理？
+
+autoreleasepool是一张双向链表，每一个结点是autoreleasepoolpage，每次push先判断栈是否满，未满，插入一个哨兵，返回哨兵地址，然后添加对象，满则插入一个新page，每次pop，把到哨兵前的对象release。
+
+
+
+注：不同的线程有不同的autoreleasepool。
+
+### 循环引用
+
+形成一个圈，分成：自循环，相互循环和多循环。
+
+打破循环引用方法：
+
+1. 避免循环引用
+2. 在合适的时机手动断开环
+
+因为timer会被runloop强引用，所以可以在NSTimer和vc间增加中间对象，在每次触发定时器时判断如果vc释放，则释放timer。
+
+
+
+objc使用什么机制管理对象内存？
+
+引用计数，每次runloop运行的时候，都会check retaincount，如果为零，则释放。
+
+
+
+### 如何检查内存问题？原理是什么？
+
+1. Allocation
+2. Leak
+3. Memory Graph
+4. Analyse
+5. MLeaksFinder (原理: swizzle navigationController的pop和push方法, 判断weak是否变空)
+
+### Swift对象内存模型
+
+没有isa指针，对象包括type指针，rc，属性值，
+type指针指向保存在静态空间的类对象，类对象保存方法。
+
+## Block
+
+### (1)什么是block
+
+block是将函数及其上下文封装起来的对象。
+
+### 截获变量
+
+1. 局部变量：基本数据类型截获值，对象类型连同所有权修饰符截获。
+2. 静态局部变量：指针形式截获。
+3. 全局变量：不截获。
+4. 静态全局变量：不截获。
+
+### __block修饰符
+
+1. 对局部变量无论基本类型还是对象类型赋值都需要__block.
+2. 对静态局部、全局、静态全局变量赋值都不需要__block。
+
+__block修饰的变量变成了__struct对象, 地址被传入block。
+
+### block内存管理
+
+什么时候发生copy：
+
+1. 显示调用copy
+2. block作为函数返回值
+3. block被赋值给id成员变量或__strong修饰的block成员
+4. 作为系统方法usingblock的参数或GCD参数
+
+对不同类型block作copy操作：
+
+1. Global，copy什么不做
+2. Stack， copy to heap
+3. Malloc, copy增加引用计数
+
+__forwarding在未copy时指向栈上的block变量，copy后不论栈或是堆的forwarding都指向堆上的block对象。
+
+![forwarding](./iOS_interview_image/block_forwarding.png)
+
+### (1)block的循环引用
+
+解决循环引用两个方法：
+
+1. 手动断开
+2. weak
+
+
+
+```
+_blk = ^{NSLog(@"self = %@", self);};
+```
+
+问题：循环引用，堆上的block对self强引用，self对block成员强引用。
+
+修改方法：block内容实用weak self。
 
 ## Runtime
 
@@ -336,7 +526,7 @@ const char* types
 
 2. 
 
-###消息传递
+### 消息传递
 
 objc_msgSend 消息传递，
 
@@ -346,7 +536,7 @@ _objc_msgForward 消息转发。
 
 
 
-####以下代码，输出什么？
+#### 以下代码，输出什么？
 
 ```
 @interface Phone: Mobile
@@ -379,7 +569,7 @@ struct objc_super {
 ```
 super只是从父类开始查，最后还是在NSObject中找到class方法，因为super的receiver还是self，所以返回phone
 
-###方法缓存
+### 方法缓存
 
 1. 通过SEL去cache的哈希表中查找，如果没有
 2. 在当前类中查找，如果方法列表是排序好的，用二分法查找，如果未排序，遍历，如果没有
@@ -417,7 +607,7 @@ class_addMethod
 
 
 
-###动态方法解析
+### 动态方法解析
 
 @dynamic： 属性的setter与getter用户实现，不自动生成
 
@@ -434,177 +624,6 @@ class_addMethod
 3. 到可执行程序初始化，runtime对所有类初始化调用load，由于lazy bind机制，依赖库多数在使用时才初始化类结构
 4. 所有初始化结束，调用main
 
-
-
-## Memory
-
-###(1)内存布局
-
-![memory](./iOS_interview_image/memory_layout.png)
-
-stack: 方法调用
-
-heap：alloc等分配的对象
-
-bss：未初始化的全局和静态变量
-
-data：已初始化的全局和静态变量
-
-### (1)内存管理方案
-
-1. TaggedPointer(适用于number等小对象， 没有isa，本身即是实际值+一些信息)
-2. NONPOINTER_ISA（优化的isa指针，保存更多信息）
-3. 散列表（当isa的extra_rc不足以保存时，会保存到引用计数表）
-
-
-
-NONPOINTER_ISA
-
-![nonpointer_isa](./iOS_interview_image/nonpointer_isa_address_1.png)
-
-![nonpointer](./iOS_interview_image/nonpointer_isa_address_2.png)
-
-散列表
-
-sidetables：hash表，value为sidetable，通过对象找到对象所属的sidetable
-
-sidetable包含：
-
-1. 自旋锁：忙等锁，适合轻量访问
-2. 引用计数表：hash表，value结构：
-
-![reference_table](./iOS_interview_image/reference_hash_map.png)
-
-3. 弱引用表：hash表
-
-   ![weak table](./iOS_interview_image/weak_reference_hashmap.png)
-
-### ARC & MRC
-
- MRC：手动管理，alloc, dealloc, **retain, release, retainCount, autorelease**
-
-ARC: 自动管理，编译器和runtime协作，不能使用手动管理关键词，增加weak,strong关键词
-
-
-
-ARC通过什么方式帮助管理内存？
-
-在编译期，在底层接口实现retain/release/autorelease； 在运行期，通过weak自动释放等管理内存。
-
-### 引用计数
-
-retainCount = 存在数据结构中的引用计数+1， 所以尽管alloc不调用retain，retainCount=1.
-
-dealloc内部实现
-
-![dealloc](./iOS_interview_image/dealloc_process.png)
-
-### (1)弱引用
-
-添加weak变量过程
-
-id __weak a = b -> objc_initWeak(&a, b) ->storeWeak ->weak_register_no_lock
-
-在register函数中，会通过hash查找对象b的弱引用表，如果对象b weak表为空，创建一张新表，使第一个元素为指针a，其余为nil，不为空，直接添加新元素。
-
-清除weak变量，指针置为nil过程
-
-dealloc ->... ->weak_clear_no_lock
-
-在clear中，会通过hash查找当前对象对应的弱引用表，然后遍历，如果找到指针，置为nil。
-
-### 自动释放池
-
-####自动释放池怎么释放？*或* 与runloop关系？
-
-App启动后，苹果在主线程 RunLoop 里注册了两个 Observer
-第一个 Observer是 监听Entry，用来创建自动释放池。优先级最高，保证创建释放池发生在其他所有回调之前。
-第二个 Observer 监视了两个事件： BeforeWaiting 时 释放旧池创建新池；Exit时释放自动释放池。这个 Observer 的 优先级最低，保证其释放池子发生在其他所有回调之后。
-
-####自动释放池原理？
-
-autoreleasepool是一张双向链表，每一个结点是autoreleasepoolpage，每次push先判断栈是否满，未满，插入一个哨兵，返回哨兵地址，然后添加对象，满则插入一个新page，每次pop，把到哨兵前的对象release。
-
-
-
-注：不同的线程有不同的autoreleasepool。
-
-### 循环引用
-
-形成一个圈，分成：自循环，相互循环和多循环。
-
-打破循环引用方法：
-
-1. 避免循环引用
-2. 在合适的时机手动断开环
-
-因为timer会被runloop强引用，所以可以在NSTimer和vc间增加中间对象，在每次触发定时器时判断如果vc释放，则释放timer。
-
-
-
-objc使用什么机制管理对象内存？
-
-引用计数，每次runloop运行的时候，都会check retaincount，如果为零，则释放。
-
-
-
-### 如何检查内存问题？原理是什么？
-
-## Block
-
-### (1)什么是block
-
-block是将函数及其上下文封装起来的对象。
-
-### 截获变量
-
-1. 局部变量：基本数据类型截获值，对象类型连同所有权修饰符截获。
-2. 静态局部变量：指针形式截获。
-3. 全局变量：不截获。
-4. 静态全局变量：不截获。
-
-###__block修饰符
-
-1. 对局部变量无论基本类型还是对象类型赋值都需要__block.
-2. 对静态局部、全局、静态全局变量赋值都不需要__block。
-
-__block修饰的变量变成了__struct对象, 地址被传入block。
-
-###block内存管理
-
-什么时候发生copy：
-
-1. 显示调用copy
-2. block作为函数返回值
-3. block被赋值给id成员变量或__strong修饰的block成员
-4. 作为系统方法usingblock的参数或GCD参数
-
-对不同类型block作copy操作：
-
-1. Global，copy什么不做
-2. Stack， copy to heap
-3. Malloc, copy增加引用计数
-
-__forwarding在未copy时指向栈上的block变量，copy后不论栈或是堆的forwarding都指向堆上的block对象。
-
-![forwarding](./iOS_interview_image/block_forwarding.png)
-
-###(1)block的循环引用
-
-解决循环引用两个方法：
-
-1. 手动断开
-2. weak
-
-
-
-```
-_blk = ^{NSLog(@"self = %@", self);};
-```
-
-问题：循环引用，堆上的block对self强引用，self对block成员强引用。
-
-修改方法：block内容实用weak self。
 
 ## 多线程
 
@@ -669,7 +688,7 @@ dispatch_barrier_async
 
 ![thread](./iOS_interview_image/thread_process.png)
 
-###多线程与锁
+### 多线程与锁
 
 锁：
 
@@ -687,9 +706,9 @@ dispatch_barrier_async
 
 #### block?循环引用？
 
-## RunLoop
+### RunLoop
 
-### 概念
+#### 概念
 
 内部维护事件循环对事件/消息管理的对象。
 
@@ -699,17 +718,17 @@ dispatch_barrier_async
 
 之所以唤醒，是由于mach_msg在一定条件(source1等), 会唤醒runloop，返回用户态
 
-### 数据结构
+#### 数据结构
 
 1. CFRunLoop
 2. CFRunLoopMode
 3. souce/timer/observer: source0触摸事件，source1 port事件
 
-### (1)事件循环机制
+#### (1)事件循环机制
 
 ![process](./iOS_interview_image/runloop_process.png)
 
-### RunLoop与NSTimer
+#### RunLoop与NSTimer
 
 苹果mode name:
 
@@ -719,7 +738,7 @@ dispatch_barrier_async
 
 将defaultmode和uitrackingmode加入runloop的commonmode（系统预置），timer加入commonmodeitems，timer会自动同步到各个commonmode下，可以使timer在多个mode下运行。
 
-###RunLoop与多线程
+#### RunLoop与多线程
 
 1. 一一对应
 2. 主线程自动开启，非主线程手动开启
@@ -748,9 +767,94 @@ model主要用来指定事件在运行循环中的优先级。
 
 添加observer到runloop的common mode，通过各个阶段的运行时间，判断卡顿位置。
 
-##网络
+## UI
 
-###http协议
+UIView内部有一个layer成员，UIView只负责事件的传递和响应，CALayer负责视图显示，这里体现了单一职责原则。
+
+### 事件传递和响应
+
+传递： UIApplication->UIWindow->UIView, 通过hitTest和pointinside判断，hidden、alpha、userinteractionisenable可以用来屏蔽视图传递。
+
+响应：如果传递到的视图UIResponse相关的touchbegin、touchmove、touchend不响应，则交给父视图，如果都没有响应，则丢弃这个事件。
+
+### 图像显示原理
+
+总结：CPU得到位图，通过总线传给GPU渲染，然后保存到帧缓冲区，视频控制器根据信号从帧缓冲区提取内容显示到显示器。
+
+![display](./iOS_interview_image/whole_display.png)
+
+cpu和gpu
+
+![cpu&gpu](./iOS_interview_image/cpu_gpu_display.png)
+
+cpu
+
+![cpu](./iOS_interview_image/cpu_display.png)
+
+layout: 布局和文本计算
+
+display: 绘制
+
+prepare：图片编解码
+
+commit：提交位图
+
+gpu(了解)
+
+![gpu](./iOS_interview_image/gpu_display.png)
+
+
+
+#### 卡顿&掉帧
+
+60fps，即60帧每秒，即每16.7ms会有一个VSync信号
+
+如果在信号到来时，CPU和GPU不能完成完成任务，就会掉帧。
+
+
+
+#### 图像如何优化？TableView如何优化？ 
+
+1. CPU
+   1. 对象在子线程创建、修改、删除
+   2. 在子线程预排版（布局和文本计算）
+   3. 预渲染（文本等异步绘制，图片编解码等）
+2. GPU
+   1. 纹理渲染方面，减少离屏渲染，即：
+      1. 圆角+maskToBounds
+      2. 图层蒙版(mask)
+      3. 阴影(shadow)
+      4. 光栅化 
+   2. 视图混合方面，简化视图层级
+
+
+
+注： 离屏渲染：GPU在当前屏幕缓冲区以外新开辟一块空间用于渲染，在GPU面临瓶颈时，可以将一部分交给CPU完成，但是CPU的渲染能力远不如GPU高效，所以一般不推荐使用。
+
+#### 绘制原理&异步绘制
+
+UIView绘制原理
+
+![draw](./iOS_interview_image/draw_principle.png)
+
+setneedsdisplay只是打上标记，display是在runloop下一个绘制周期被调用。
+
+系统绘制流程
+
+![system](./iOS_interview_image/system_draw_process.png)
+
+(backing store 相当于bitmap）
+
+异步绘制流程
+
+1. layer.delegate生成bitmap
+2. 将bitmap赋给layer.contents
+
+![async_draw](./iOS_interview_image/async_draw_process.png)
+
+## 网络
+
+### http协议
 
 request和reponse格式
 
@@ -779,7 +883,7 @@ http特点
 1. 无连接 -> http持久连接，头部字段：（Connection： keep-alive, time: 20(多少时间), max: 10（多少条请求）)
 2. 无状态 -> Cookie/Session
 
-###https与网络安全
+### https与网络安全
 
 https = http + ssl/tls
 
@@ -789,7 +893,7 @@ https连接流程
 
 
 
-###tcp/udp
+### tcp/udp
 
 传输层。
 
@@ -815,9 +919,9 @@ tcp特点：
 4. 流量控制
 5. 拥塞控制 
 
-###dns解析
+### dns解析
 
-###session/cookie
+### session/cookie
 
 
 
@@ -837,7 +941,17 @@ charles抓包原理？
 
 中间人攻击。
 
-## 设计模式
+## 性能优化(Pending)
+
+### 电量优化？
+
+1. CPU和GPU优化
+2. 定位：降低精确度，及时关闭
+3. 网络：一次性下载数据，多用缓存
+4. 蓝牙陀螺仪等硬件：按需使用
+
+
+## 设计模式与架构
 
 #### 原则
 
@@ -850,7 +964,7 @@ charles抓包原理？
 
 
 
-###责任链
+### 责任链
 
 调用方法时，像链表一样传递下去，每一个节点基类相同只处理自己相关的事务。
 
@@ -879,7 +993,7 @@ class BaseA {
 }
 ```
 
-###适配器
+### 适配器
 
 转换接口。
 
@@ -893,7 +1007,7 @@ class A{
 }
 ```
 
-###单例
+### 单例
 
 只有一个实例，懒汉和饿汉。
 
@@ -918,15 +1032,15 @@ class Single {
 }
 ```
 
-###命令
+### 命令
 
 将请求封装成对象，支持cancel。
 
-###策略
+### 策略
 
 一个方法有多种实现，对于不同的类型可以用不同的实现。
 
-###工厂
+### 工厂
 
 封装类的实例化。
 
@@ -936,17 +1050,17 @@ class Single {
 
 抽象工厂：包含多个接口，每个接口创建一个实例类。
 
-###状态
+### 状态
 
 内部状态改变时，切换状态对象。
 
-###观察者
+### 观察者
 
 特点：一对多，松耦合。
 
 描述：注册成为某个主题的观察者，当主题的状态变化，通知所有观察者。
 
-###代理
+### 代理
 
 委托他人实现具体方法。
 
@@ -962,7 +1076,7 @@ class Single {
 
 提供统一接口。
 
-###模版
+### 模版
 
 父类创建算法模版，子类通过继承修改某些方法实现。
 
@@ -970,7 +1084,7 @@ class Single {
 
 通过装饰者动态给原有对象添加新的功能，装饰者和原有对象类型相同。
 
-## 架构
+### 架构
 
 目的
 
@@ -984,7 +1098,7 @@ class Single {
 
 
 
-###图片缓存？
+#### 图片缓存？
 
 ![design layer](./iOS_interview_image/image_cache_design_layer.png)
 
@@ -1019,7 +1133,7 @@ class Single {
 
 
 
-###阅读时长统计？
+#### 阅读时长统计？
 
 ![readtime](./iOS_interview_image/readtime_design.png)
 
@@ -1071,14 +1185,42 @@ client层：UI， DownloadManger, UploadManager, RenderManager
 
 
 
-###组件化？
+#### 组件化？
 
 目的：解耦，复用，方便管理。
 
 按照基础组件、功能组件、业务组件将项目拆分成多个子项目， 业务组件可以依赖基础组件和功能组件， 业务组件和业务组件之间通过中间层解耦，中间层通过router访问组件最后形成组件对中间层的单向依赖。
 
-##算法
+## 算法和数据结构
+### 数据结构
+链表
+栈 FILO
+队列 FIFO
+哈希表 key和value通过哈希函数映射
+字典
+#### 树
+* 二叉搜索树
+  二叉树，满足left <= middle <= right
+  中序遍历(根在中间)
+  先序遍历（根在前）
+  后序遍历（根在后）
+  操作： 查询，删除，添加
+* 红黑树
+  是一棵平衡二叉树，满足：
+  1. 根节点和叶子结点是黑色
+  2. 如果一个结点是红色，则它的子节点是黑色
+  3. 对每个结点，到所有后代叶结点的黑色结点相同
+* B树
 
+### 排序算法
+快排
+希尔
+桶
+冒泡
+选择
+堆
+归并
+### 常见算法
 字符串反转？
 
 链表反转？
@@ -1127,4 +1269,12 @@ SessionManager的单例default设置SessionDelegate为URLSession的delegate。
 
 JS通过Iframe，加载url，触发native webview代理，native调用api后回调JS方法。
 
+### RxSwift(Pending)
 
+### PromiseKit(Pending)
+
+## 跨平台(Pending)
+
+### Flutter
+
+### ReactiveNative
