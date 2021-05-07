@@ -58,11 +58,14 @@ title: iOS面试题
 			- [RunLoop与NSTimer](#runloop与nstimer)
 			- [RunLoop与多线程](#runloop与多线程)
 	- [UI](#ui)
-		- [事件传递和响应](#事件传递和响应)
-		- [图像显示原理](#图像显示原理)
-			- [卡顿&掉帧](#卡顿掉帧)
-			- [图像如何优化？TableView如何优化？](#图像如何优化tableview如何优化)
-			- [绘制原理&异步绘制](#绘制原理异步绘制)
+		- [UIView vs CALayer](#uiview-vs-calayer)
+		- [点击事件是如何传递和响应？](#点击事件是如何传递和响应)
+		- [图像是如何显示？](#图像是如何显示)
+			- [CPU和GPU各做了什么？](#cpu和gpu各做了什么)
+			- [为什么会卡顿掉帧？](#为什么会卡顿掉帧)
+			- [什么是离屏渲染？为什么会产生离屏渲染？](#什么是离屏渲染为什么会产生离屏渲染)
+			- [UIView绘制原理](#uiview绘制原理)
+			- [如何提高界面流畅度？](#如何提高界面流畅度)
 	- [网络](#网络)
 		- [http协议](#http协议)
 		- [https与网络安全](#https与网络安全)
@@ -108,6 +111,7 @@ title: iOS面试题
 	- [跨平台(Pending)](#跨平台pending)
 		- [Flutter](#flutter)
 		- [ReactiveNative](#reactivenative)
+	- [参考](#参考)
 
 # iOS知识点
 
@@ -769,75 +773,51 @@ model主要用来指定事件在运行循环中的优先级。
 
 ## UI
 
-UIView内部有一个layer成员，UIView只负责事件的传递和响应，CALayer负责视图显示，这里体现了单一职责原则。
+### UIView vs CALayer
+UIView有一个layer成员，同时它继承自UIResponder.
+CALayer负责视图显示，UIView只负责事件的传递和响应，体现了单一职责原则。
 
-### 事件传递和响应
+### 点击事件是如何传递和响应？
+点击事件被UIApplication捕获，然后从UIWindow到UIView, 一层一层直到传递到最内层的UIView。通过hitTest和pointinside可以判断点是否在这个视图上，通过修改hidden、alpha、userinteractionisenable可以屏蔽视图传递。
+当事件传递到最内层后，通过判断当前视图UIResponse相关的touchbegin、touchmove、touchend是否响应，决定是否把事件交给父视图处理，如果都没有响应，则丢弃这个事件。
 
-传递： UIApplication->UIWindow->UIView, 通过hitTest和pointinside判断，hidden、alpha、userinteractionisenable可以用来屏蔽视图传递。
-
-响应：如果传递到的视图UIResponse相关的touchbegin、touchmove、touchend不响应，则交给父视图，如果都没有响应，则丢弃这个事件。
-
-### 图像显示原理
-
-总结：CPU得到位图，通过总线传给GPU渲染，然后保存到帧缓冲区，视频控制器根据信号从帧缓冲区提取内容显示到显示器。
+### 图像是如何显示？
+CPU从UIView中得到位图，通过总线传给GPU进行渲染，然后将结果保存在帧缓冲区。视频控制器根据垂直信号从帧缓冲区提取内容显示到显示器上。
 
 ![display](./iOS_interview_image/whole_display.png)
 
-cpu和gpu
+#### CPU和GPU各做了什么？
+CPU的工作：
+1. layout：布局和文本计算
+2. display: 绘制
+3. prepare：图片编解码
+4. commit：提交位图
+
+GPU的工作：
+1. 顶点着色
+2. 图元装配
+3. 光栅化
+4. 片段着色
+5. 片段处理
 
 ![cpu&gpu](./iOS_interview_image/cpu_gpu_display.png)
 
-cpu
 
-![cpu](./iOS_interview_image/cpu_display.png)
+#### 为什么会卡顿掉帧？
+正常情况下每秒要显示60帧，每16.7ms会产生一个垂直信号，如果信号到来时，CPU和GPU不能将结果存入帧缓冲区，就会掉帧。
 
-layout: 布局和文本计算
+#### 什么是离屏渲染？为什么会产生离屏渲染？
+GPU在当前屏幕缓冲区以外新开辟一块空间用于渲染就叫离屏渲染。当修改某些图层属性，未合成时不能显示，就会触发离屏渲染。
+1. 圆角（和maskToBounds一起使用）
+2. 图层蒙版
+3. 阴影
+4. 光栅化
 
-display: 绘制
-
-prepare：图片编解码
-
-commit：提交位图
-
-gpu(了解)
-
-![gpu](./iOS_interview_image/gpu_display.png)
-
-
-
-#### 卡顿&掉帧
-
-60fps，即60帧每秒，即每16.7ms会有一个VSync信号
-
-如果在信号到来时，CPU和GPU不能完成完成任务，就会掉帧。
-
-
-
-#### 图像如何优化？TableView如何优化？ 
-
-1. CPU
-   1. 对象在子线程创建、修改、删除
-   2. 在子线程预排版（布局和文本计算）
-   3. 预渲染（文本等异步绘制，图片编解码等）
-2. GPU
-   1. 纹理渲染方面，减少离屏渲染，即：
-      1. 圆角+maskToBounds
-      2. 图层蒙版(mask)
-      3. 阴影(shadow)
-      4. 光栅化 
-   2. 视图混合方面，简化视图层级
-
-
-
-注： 离屏渲染：GPU在当前屏幕缓冲区以外新开辟一块空间用于渲染，在GPU面临瓶颈时，可以将一部分交给CPU完成，但是CPU的渲染能力远不如GPU高效，所以一般不推荐使用。
-
-#### 绘制原理&异步绘制
-
-UIView绘制原理
+#### UIView绘制原理
+当调用UIView的setneedsdisplay只是打上标记，display会在runloop下一个绘制周期被调用，如果实现了layer的displayLayer会触发异步绘制。
 
 ![draw](./iOS_interview_image/draw_principle.png)
 
-setneedsdisplay只是打上标记，display是在runloop下一个绘制周期被调用。
 
 系统绘制流程
 
@@ -847,10 +827,33 @@ setneedsdisplay只是打上标记，display是在runloop下一个绘制周期被
 
 异步绘制流程
 
-1. layer.delegate生成bitmap
-2. 将bitmap赋给layer.contents
-
 ![async_draw](./iOS_interview_image/async_draw_process.png)
+
+#### 如何提高界面流畅度？ 
+1. 优化CPU
+   1. 优化对象创建、调整、销毁
+      1. 对于不涉及事件响应的控件，使用轻量的CALayer代替UIView
+      2. storyboard资源消耗大，在性能敏感的情况不使用storyboard创建对象
+      3. 推迟对象的创建，使用缓存池复用对象
+      4. layer的属性的修改是通过运行时resolveInstanceMethod为对象临时添加方法，属性值保存在Dictionary中，并且会通知delegate等，应该尽量减少属性修改
+      5. 视图层次修改时，会产生很多方法调用，应尽量避免视图层次的调整，添加和修改
+      6. 把对象放到后台线程销毁
+   2. 优化布局和文本计算
+      1. 在后台线程提早计算好布局，一次性调整视图属性
+      2. 复杂视图autolayout消耗指数上升，可以通过手动布局
+      3. 在后台线程计算文本宽高
+   3. 优化文本渲染，图片编解码等
+      1. 通过自定义文本控件，异步绘制
+      2. 在后台线程把图片会绘制到CGBitmapContext，然后从Bitmap绘制图片
+      3. 在异步线程进行图像绘制
+2. 优化GPU
+   1. 优化纹理渲染
+      1. 将多张图片合成一张图片显示
+   2. 优化视图混合
+      1. 减少视图层级和数量，在不透明的视图中使用opaque避免Alpha合成
+   3. 优化图形生成
+      1. 为了防止离屏渲染，避免使用遮罩、圆角、阴影等
+      2. 把需要显示的图形在后台线程绘制成图片
 
 ## 网络
 
@@ -1278,3 +1281,7 @@ JS通过Iframe，加载url，触发native webview代理，native调用api后回�
 ### Flutter
 
 ### ReactiveNative
+
+## 参考
+[UI绘制原理1](https://leoliuyt.github.io/2018/05/26/UI绘制原理/)
+[UI绘制原理2](http://hchong.net/2019/05/11/iOS开发UI-UI绘制原理/)
