@@ -69,6 +69,7 @@ title: iOS面试题
 	- [网络](#网络)
 		- [http协议](#http协议)
 		- [https与网络安全](#https与网络安全)
+			- [tls](#tls)
 		- [tcp/udp](#tcpudp)
 		- [dns解析](#dns解析)
 		- [session/cookie](#sessioncookie)
@@ -102,6 +103,9 @@ title: iOS面试题
 			- [树](#树)
 		- [排序算法](#排序算法)
 		- [常见算法](#常见算法)
+		- [加密算法](#加密算法)
+			- [RSA](#rsa)
+			- [DH](#dh)
 	- [第三方库](#第三方库)
 		- [Alamofire?](#alamofire)
 		- [SDWebImage?](#sdwebimage)
@@ -175,7 +179,6 @@ removeAssociatedObjects
 ### KVO & KVC
 
 KVO：key-value observing, 观察者模式，通过isa-swizzling（动态创建新子类，重写setter方法，修改isa指针）实现。
-
 重写的setter方法：
 
 ```
@@ -186,8 +189,13 @@ KVO：key-value observing, 观察者模式，通过isa-swizzling（动态创建�
 }
 ```
 
-KVC：key-value coding，键值编码。
-
+KVC：key-value coding，键值编码。KVC只适用于NSObject对象。
+执行机制：
+1. 调用`set<key>`, 没有
+2. 检查`accessInstanceVariablesDirectly`是否返回Yes, 是找`_<Key>`, 不是调用`setValue forUndefinedKey`
+3. 如果`_<key>`没有，找`_is<key>`,没有
+4. 找`<key>`和`is<key>`
+5. 都没有，调用`setValue:forUndefinedKey`，默认抛异常。
 valueForKey
 
 setValue:forKey
@@ -888,10 +896,13 @@ http特点
 
 ### https与网络安全
 
-https = http + ssl/tls
+https = http + tls
 
-https连接流程
-
+#### tls
+加密协议层，注意：
+1. 会话密钥是通过三个随机数合成。
+2. 通过服务器的公钥加密客户端生成的第三个随机数，保证了安全性。
+具体流程：
 ![https_process](./iOS_interview_image/https_process.png)
 
 
@@ -1240,7 +1251,19 @@ Hash算法？
 
 递归与迭代？
 
+### 加密算法
+#### RSA
+素数因式分解困难。
 
+#### DH
+1. 公开a和p
+2. 各自产生公私钥: x, a^x, y, a^y
+3. 交换公钥a^x, a^y
+4. 得到会话密钥(a^y)^x = (a^x)^y mod p
+
+原理：
+`k = (a^x)^y = (a^y)^x mod p`
+大数的对数计算很慢。
 
 ## 第三方库
 
