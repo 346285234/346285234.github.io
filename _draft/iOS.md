@@ -1,50 +1,60 @@
 ---
 layout: post
-title: iOS面试题
+title: iOS知识树
 ---
 
-- [iOS知识点](#ios知识点)
+- [iOS](#ios)
 	- [语言特性](#语言特性)
+		- [分类](#分类)
+		- [扩展](#扩展)
 		- [分类 vs 扩展](#分类-vs-扩展)
 		- [关联对象](#关联对象)
 		- [代理 vs 通知](#代理-vs-通知)
-			- [通知实现原理？](#通知实现原理)
-		- [KVO & KVC](#kvo--kvc)
+			- [通知如何实现？](#通知如何实现)
+		- [KVO](#kvo)
+		- [KVC](#kvc)
 		- [属性关键字](#属性关键字)
+			- [assign vs weak:](#assign-vs-weak)
 			- [怎么用copy？](#怎么用copy)
+				- [浅拷贝 vs 深拷贝？](#浅拷贝-vs-深拷贝)
 			- [MRC下retain修饰setter方法？](#mrc下retain修饰setter方法)
 			- [id vs instancetype?](#id-vs-instancetype)
 		- [Swift语言特性](#swift语言特性)
+			- [Swift对象内存模型](#swift对象内存模型)
 	- [内存](#内存)
-		- [(1)内存布局](#1内存布局)
-		- [(1)内存管理方案](#1内存管理方案)
-		- [ARC & MRC](#arc--mrc)
+		- [虚拟内存](#虚拟内存)
+		- [NSObject数据结构](#nsobject数据结构)
+		- [isa](#isa)
+			- [isa指向](#isa指向)
+			- [isa类型](#isa类型)
+				- [NONPOINTER_ISA](#nonpointer_isa)
+				- [散列表](#散列表)
+					- [引用计数表](#引用计数表)
+					- [弱引用表](#弱引用表)
 		- [引用计数](#引用计数)
-		- [(1)弱引用](#1弱引用)
-		- [自动释放池](#自动释放池)
-			- [自动释放池怎么释放？*或* 与runloop关系？](#自动释放池怎么释放或-与runloop关系)
-			- [自动释放池原理？](#自动释放池原理)
-		- [循环引用](#循环引用)
-		- [如何检查内存问题？原理是什么？](#如何检查内存问题原理是什么)
-		- [Swift对象内存模型](#swift对象内存模型)
-	- [Block](#block)
-		- [(1)什么是block](#1什么是block)
-		- [截获变量](#截获变量)
-		- [__block修饰符](#__block修饰符)
-		- [block内存管理](#block内存管理)
-		- [(1)block的循环引用](#1block的循环引用)
+			- [ARC](#arc)
+				- [ARC下的dealloc](#arc下的dealloc)
+			- [自动释放池](#自动释放池)
+				- [自动释放池什么时候释放？](#自动释放池什么时候释放)
+			- [循环引用](#循环引用)
+			- [objc使用什么机制管理对象内存？](#objc使用什么机制管理对象内存)
+			- [如何检查内存问题？原理是什么？](#如何检查内存问题原理是什么)
 	- [Runtime](#runtime)
-		- [类对象与元类对象](#类对象与元类对象)
-		- [数据结构](#数据结构)
 		- [消息传递](#消息传递)
 			- [以下代码，输出什么？](#以下代码输出什么)
-		- [方法缓存](#方法缓存)
-		- [消息转发](#消息转发)
-		- [method-swizzling](#method-swizzling)
-		- [动态添加](#动态添加)
+			- [消息转发](#消息转发)
+		- [Method-Swizzling](#method-swizzling)
+		- [动态添加方法](#动态添加方法)
 		- [动态方法解析](#动态方法解析)
 		- [main之前？](#main之前)
+	- [Block](#block)
+		- [什么是block？](#什么是block)
+		- [截获变量](#截获变量)
+		- [__block修饰符](#__block修饰符)
+		- [block类型](#block类型)
+		- [block的循环引用](#block的循环引用)
 	- [多线程](#多线程)
+	- [同步异步串行并行](#同步异步串行并行)
 		- [GCD](#gcd)
 		- [NSOperation](#nsoperation)
 		- [NSThread](#nsthread)
@@ -53,7 +63,7 @@ title: iOS面试题
 			- [block?循环引用？](#block循环引用)
 		- [RunLoop](#runloop)
 			- [概念](#概念)
-			- [数据结构](#数据结构-1)
+			- [数据结构](#数据结构)
 			- [(1)事件循环机制](#1事件循环机制)
 			- [RunLoop与NSTimer](#runloop与nstimer)
 			- [RunLoop与多线程](#runloop与多线程)
@@ -99,7 +109,7 @@ title: iOS面试题
 			- [MVVM？](#mvvm)
 			- [组件化？](#组件化)
 	- [算法和数据结构](#算法和数据结构)
-		- [数据结构](#数据结构-2)
+		- [数据结构](#数据结构-1)
 			- [树](#树)
 		- [排序算法](#排序算法)
 		- [常见算法](#常见算法)
@@ -117,70 +127,59 @@ title: iOS面试题
 		- [ReactiveNative](#reactivenative)
 	- [参考](#参考)
 
-# iOS知识点
+
+# iOS
 
 ## 语言特性
 
-### 分类 vs 扩展
-
-1. 分类运行时添加，类扩展编译时， 所以分类没有实现不会警告
-2. 分类可以对系统类添加分类
-3. 分类可以添加方法、属性，类扩展可以添加方法、属性、实例变量
-4. 类扩展在.m中
-
-分类作用：
-
+### 分类 
 1. 声明私有方法
 2. 按不同的功能分解类
 3. 把framework私有方法公开
 
-易错点：
+分类方法添加到方法列表顺序：
+后编译的分类方法先添加到方法列表，原类方法最后添加到方法列表，所以最后编译的分类会”覆盖“前面的方法。
 
-1. 分类添加的方法可以“覆盖”原类方法
-2. 同名分类方法后编译的先生效
-3. 名字相同的分类会引起编译报错
+[源码][runtime源码]
+
+### 扩展
+```
+// 扩展
+@interface Car()
+-(void)fire;
+@property (nonatomic) NSUInterge price;
+@end
+```
+1. 声明私有属性
+2. 声明私有方法
+3. 声明私有成员变量
+
+### 分类 vs 扩展
+1. 分类运行时添加，扩展编译时。
+2. 可以为系统类添加分类，扩展不行。
+4. 类扩展只能在原类.m中。
 
 ### 关联对象
-
-关联对象的本质：
-
-关联对象由AssociationsManager管理，对象上所有关联对象会被保存到一个AssociationMap, 然后存入一个全局的AssociationsHashMap.
-
-作用：可以为分类添加实例变量。
-
-
-
-函数： 
-
+为分类动态添加实例变量，方法： 
+```
 getAssociatedObject
-
 setAssociatedObject
-
 removeAssociatedObjects
-
-
-
-注：关联对象不需要在dealloc释放无论ARC还是MRC都会在dealloc后自动解除关联对象。
-
-
+```
+关联对象的本质：
+由AssociationsManager管理，对象上所有关联对象会被保存到一个AssociationMap, 然后保存在一个全局的AssociationsHashMap.
 
 ### 代理 vs 通知
-
 1. 代理模式， 观察者模式
 2. 代理一对一， 通知一对多
 3. 代理借助协议实现， 需要注意循环引用
 
-
-
-#### 通知实现原理？
-
+#### 通知如何实现？
 保存一张Map表，key为观察的notificationname，value为一个结构体包含观察的对象和回调的函数，利用观察者模式实现。
 
-### KVO & KVC
-
-KVO：key-value observing, 观察者模式，通过isa-swizzling（动态创建新子类，重写setter方法，修改isa指针）实现。
+### KVO
+key-value observing, 观察者模式，通过isa-swizzling（动态创建新子类，重写setter方法，修改isa指针）实现。
 重写的setter方法：
-
 ```
 - (void)setValue:(NSString *)value {
 	[self willChangeValueForKey: @"value"];
@@ -189,24 +188,25 @@ KVO：key-value observing, 观察者模式，通过isa-swizzling（动态创建�
 }
 ```
 
-KVC：key-value coding，键值编码。KVC只适用于NSObject对象。
-执行机制：
-1. 调用`set<key>`, 没有
-2. 检查`accessInstanceVariablesDirectly`是否返回Yes, 是找`_<Key>`, 不是调用`setValue forUndefinedKey`
-3. 如果`_<key>`没有，找`_is<key>`,没有
-4. 找`<key>`和`is<key>`
-5. 都没有，调用`setValue:forUndefinedKey`，默认抛异常。
+为什么不用分类而是用继承？
+因为分类会覆盖原有set方法。
+
+### KVC
+key-value coding，键值编码。
+方法：
+```
 valueForKey
-
 setValue:forKey
-
-可以通过KVC访问私有方法，会破坏面向对象。
+```
+可以通过KVC访问私有变量，会破坏面向对象。
+执行机制：
+1. 判断方法或类似方法是否存在, 没有
+2. 判断`accessInstanceVariablesDirectly`是否返回Yes, 是找实例变量或类似实例变量, 不是调用`setValue forUndefinedKey`
+3. 有类似实例变量，直接使用，没有
+5. 调用`setValue:forUndefinedKey`，默认抛异常。
+（类似方法是指: getKey, Key, isKey，类似实例变量是指：_key, _isKey, key, isKey）
 
 ![kvc](./iOS_interview_image/kvc_process.png)
-
-1. 判断getter或setter方法是否存在
-2. 如果没有实现accessInstanceVariablesDirectly, 则判断实例变量(key, _key)或相似的实例变量( _isKey, _isKey)是否存在
-3. 调用get或set的undefinedkey函数
 
 ### 属性关键字
 
@@ -214,29 +214,18 @@ setValue:forKey
 2. 原子: atomic(default, get, set线程安全，但是对数组的add，remove等不保证线程安全), nonatomic
 3. 引用计数: strong/retain, assign/unsafe_unretained, weak, copy
 
-assign vs weak:
-
+#### assign vs weak:
 1. assign可以用于基本类型， weak只用于OC对象
-
 2. assign和weak不改变引用计数
-
 3. assign可能产生悬挂指针，weak释放自动置为nil
 
-   
-
 #### 怎么用copy？
-
 1. NSString, NSArray, NSDictionary等因为有对应的Mutable类型，经常用copy。
 2. block用copy，block原来在栈区通过copy拷到堆区。
 
-浅拷贝 vs 深拷贝？
-
+##### 浅拷贝 vs 深拷贝？
 1. 浅拷贝增加引用计数，指向同一块地址
 2. 深拷贝不会增加引用计数，指向新开辟的内容相同的内存空间
-
-如何让自己的类用copy修饰？如何重写带copy关键字的setter？
-
-实现NSCopying， copyWithZone方法。
 
 ![copy](./iOS_interview_image/copy_mutablecopy.png)
 
@@ -255,7 +244,6 @@ assign vs weak:
 ```
 
 #### id vs instancetype?
-
 1. id在编译时不知道真实类型，instancetype知道，可以让编译器报警告。
 2. id还可以定义变量，instancetype只能用做返回值类型。
 
@@ -263,290 +251,96 @@ assign vs weak:
 1. Swift静态语言，类型在编译时决定，没有isa指针，所有类型被保存到静态空间，实例变量的第一个指针type指向对象类型。
 2. Swift所有都是对象。
 
+#### Swift对象内存模型
+没有isa指针，对象包括type指针，rc，属性值，
+type指针指向保存在静态空间的类对象，类对象保存方法。
+
 ## 内存
-
-### (1)内存布局
-
+ 
+### 虚拟内存
 ![memory](./iOS_interview_image/memory_layout.png)
 
-stack: 方法调用
+### NSObject数据结构
+![struct](./iOS_interview_image/runtime_struct.png)
 
-heap：alloc等分配的对象
+### isa
 
-bss：未初始化的全局和静态变量
+#### isa指向
+![class_metaclass](./iOS_interview_image/class_metaclass.png)
 
-data：已初始化的全局和静态变量
-
-### (1)内存管理方案
-
+#### isa类型
 1. TaggedPointer(适用于number等小对象， 没有isa，本身即是实际值+类型信息)
 2. NONPOINTER_ISA（优化的isa指针，保存更多信息）
-3. 散列表（当isa的extra_rc不足以保存时，会保存到引用计数表）
+3. 散列表（引用计数表和弱引用表）
 
-
-
-NONPOINTER_ISA
-第一位表示是isa还是nonpointer_isa
-第二位表示是否有关联对象
-第三位表示是否有c++代码
-之后33位表示内存地址
-之后还有弱引用标记，引用是否存在散列表等
-
+##### NONPOINTER_ISA
 ![nonpointer_isa](./iOS_interview_image/nonpointer_isa_address_1.png)
-
 ![nonpointer](./iOS_interview_image/nonpointer_isa_address_2.png)
 
-散列表
-
-sidetables：hash表，value为sidetable，通过对象找到对象所属的sidetable
-
+##### 散列表
+sidetables：hash表，value为sidetable，通过对象指针的hash映射找到所属表。
 sidetable包含：
-
 1. 自旋锁：忙等锁，适合轻量访问
 2. 引用计数表：hash表，value结构：
-
-![reference_table](./iOS_interview_image/reference_hash_map.png)
-
 3. 弱引用表：hash表
 
-   ![weak table](./iOS_interview_image/weak_reference_hashmap.png)
+###### 引用计数表
+hash表，value结构：
+![reference_table](./iOS_interview_image/reference_hash_map.png)
 
-### ARC & MRC
-
- MRC：手动管理，alloc, dealloc, **retain, release, retainCount, autorelease**
-
-ARC: 自动管理，编译器和runtime协作，不能使用手动管理关键词，增加weak,strong关键词
-
-
-
-ARC通过什么方式帮助管理内存？
-
-在编译时，接口内部自动添加retain/release/autorelease； 在运行时，帮助weak指针置空。
+###### 弱引用表
+![weak table](./iOS_interview_image/weak_reference_hashmap.png)
 
 ### 引用计数
 
-retainCount = 存在数据结构中的引用计数+1， 所以尽管alloc不调用retain，retainCount=1.
+#### ARC
+自动管理引用计数。
+1. 编译器LLVM自动添加retain和release
+2. runtime使weak对象置为nil
 
-dealloc内部实现
-
+##### ARC下的dealloc
 ![dealloc](./iOS_interview_image/dealloc_process.png)
 
-### (1)弱引用
+在`object_dispose`清理weak表，关联对象等。
 
-添加weak变量过程
+#### 自动释放池
+1. 双向链表，每个节点是一个栈。
+2. 和线程对应。
+3. 通过哨兵节点判断释放池的边界。
 
-id __weak a = b -> objc_initWeak(&a, b) ->storeWeak ->weak_register_no_lock
-
-在register函数中，会通过hash查找对象b的弱引用表，如果对象b weak表为空，创建一张新表，使第一个元素为指针a，其余为nil，不为空，直接添加新元素。
-
-清除weak变量，指针置为nil过程
-
-dealloc ->... ->weak_clear_no_lock
-
-在clear中，会通过hash查找当前对象对应的弱引用表，然后遍历，如果找到指针，置为nil。
-
-### 自动释放池
-
-#### 自动释放池怎么释放？*或* 与runloop关系？
-
+##### 自动释放池什么时候释放？
 App启动后，苹果在主线程 RunLoop 里注册了两个 Observer
 第一个 Observer是 监听Entry，用来创建自动释放池。优先级最高，保证创建释放池发生在其他所有回调之前。
 第二个 Observer 监视了两个事件： BeforeWaiting 时 释放旧池创建新池；Exit时释放自动释放池。这个 Observer 的 优先级最低，保证其释放池子发生在其他所有回调之后。
 
-#### 自动释放池原理？
-
-autoreleasepool是一张双向链表，每一个结点是autoreleasepoolpage，每次push先判断栈是否满，未满，插入一个哨兵，返回哨兵地址，然后添加对象，满则插入一个新page，每次pop，把到哨兵前的对象release。
-
-
-
-注：不同的线程有不同的autoreleasepool。
-
-### 循环引用
-
+#### 循环引用
 形成一个圈，分成：自循环，相互循环和多循环。
 
 打破循环引用方法：
-
 1. 避免循环引用
-2. 在合适的时机手动断开环
+2. 在合适的时机手动断环
 
-因为timer会被runloop强引用，所以可以在NSTimer和vc间增加中间对象，在每次触发定时器时判断如果vc释放，则释放timer。
+另外timer会被runloop强引用，所以可以在NSTimer和vc间增加中间对象，在每次触发定时器时判断如果vc释放，则释放timer。
 
-
-
-objc使用什么机制管理对象内存？
-
+#### objc使用什么机制管理对象内存？
 引用计数，每次runloop运行的时候，都会check retaincount，如果为零，则释放。
 
-
-
-### 如何检查内存问题？原理是什么？
-
+#### 如何检查内存问题？原理是什么？
 1. Allocation
 2. Leak
 3. Memory Graph
 4. Analyse
 5. MLeaksFinder (原理: swizzle navigationController的pop和push方法, 判断weak是否变空)
 
-### Swift对象内存模型
-
-没有isa指针，对象包括type指针，rc，属性值，
-type指针指向保存在静态空间的类对象，类对象保存方法。
-
-## Block
-
-### (1)什么是block
-
-block是将函数及其上下文封装起来的对象。
-
-### 截获变量
-
-1. 局部变量：基本数据类型截获值，对象类型连同所有权修饰符截获。
-2. 静态局部变量：指针形式截获。
-3. 全局变量：不截获。
-4. 静态全局变量：不截获。
-
-### __block修饰符
-
-1. 对局部变量无论基本类型还是对象类型赋值都需要__block.
-2. 对静态局部、全局、静态全局变量赋值都不需要__block。
-
-__block修饰的变量变成了__struct对象, 地址被传入block。
-
-### block内存管理
-
-什么时候发生copy：
-
-1. 显示调用copy
-2. block作为函数返回值
-3. block被赋值给id成员变量或__strong修饰的block成员
-4. 作为系统方法usingblock的参数或GCD参数
-
-对不同类型block作copy操作：
-
-1. Global，copy什么不做
-2. Stack， copy to heap
-3. Malloc, copy增加引用计数
-
-__forwarding在未copy时指向栈上的block变量，copy后不论栈或是堆的forwarding都指向堆上的block对象。
-
-![forwarding](./iOS_interview_image/block_forwarding.png)
-
-### (1)block的循环引用
-
-解决循环引用两个方法：
-
-1. 手动断开
-2. weak
-
-
-
-```
-_blk = ^{NSLog(@"self = %@", self);};
-```
-
-问题：循环引用，堆上的block对self强引用，self对block成员强引用。
-
-修改方法：block内容实用weak self。
-
 ## Runtime
-
-### 类对象与元类对象
-
-类对象和元类对象类型都是objc_class,
-
-1. 类对象存储实例成员、方法
-2. 元类对象存储类成员、方法
-
-![class_metaclass](./iOS_interview_image/class_metaclass.png)
-
-实例方法查找过程：
-
-1. 类对象中寻找
-2. 逐级往上，直到nil
-
-类方法查找过程：
-
-1. 元类对象中寻找
-2. 逐级往上
-3. 在根类对象寻找，如果还没有，返回nil
-
-实例对象的内存布局？（非TaggedPointer对象）
-
-1. isa指针
-2. 所有父类和自己的实例变量
-
-### 数据结构
-
-![struct](./iOS_interview_image/runtime_struct.png)
-
-id = objc_object
-
-1. isa_t
-2. 关于isa操作相关
-3. 弱引用相关
-4. 关联对象相关
-5. 内存管理相关
-
-Class = objc_class(继承自objc_object)
-
-1. superClass: Class
-2. cache: cache_t(方法缓存)
-3. bits：class_data_bits_t(类基本信息，包括原有和分类的属性、实例、方法)
-
-isa
-
-1. 指针型isa
-2. 非指针型isa（部分代表Class地址）
-
-isa指向：
-
-实例->Class->MetaClass
-
-cache_t（保存SEL和IMP）
-
-1. 用于快速查找方法
-2. 是可增量的哈希表（查找更快）
-3. 应用局部性原理（只有部分方法被频繁使用）
-
-class_data_bits_t是class_rw_t的封装
-
-class_rw_t（可读可写，保存原有+分类方法、属性等）
-
-1. class_ro_t
-2. protocols(二维数组)
-3. properties（二维数组）
-4. methods（二维数组）
-
-class_ro_t（只读, 保存原有方法、属性等）:
-
-1. name(类名)
-2. ivars（实例变量， 一维数组）
-3. properties（一维数组）
-4. protocols（一维数组）
-5. methodlist（一维数组）
-
-method_t
-
-1. SEL name 方法名称
-2. const char* types 方法返回值和参数类型
-3. IMP imp  函数体
-
-const char* types
-
-返回值 + 参数1 + ...(第一，第二个参数固定@：，表示self的id类型和方法的SEL类型)
-
-2. 
 
 ### 消息传递
 
-objc_msgSend 消息传递，
-
-_objc_msgForward 消息转发。
-
 ![message](./iOS_interview_image/message_send.png)
 
-
+1. 通过hash函数检查缓存是否命中
+2. 对于排序的方法列表，采用二分查找，对于未排序的，采用遍历。
+3. 检查父类是否命中，需要检查父类缓存和方法列表
 
 #### 以下代码，输出什么？
 
@@ -564,12 +358,11 @@ _objc_msgForward 消息转发。
 ```
 
 答案：
-
 Phone 
-
 Phone
 
 原因：
+转化成：
 ```
 [self class] -> objc_msgSend(self, @selector(class))
 [super class] ->objc_msgSendSuper(super, selector(class))
@@ -577,57 +370,25 @@ Phone
 struct objc_super {
 	__unsafe_unretained id receiver;
 }
-
 ```
-super只是从父类开始查，最后还是在NSObject中找到class方法，因为super的receiver还是self，所以返回phone
+super只是从父类开始查，最后在NSObject中找到class方法，因为super的receiver还是self，所以返回phone。
 
-### 方法缓存
+#### 消息转发
 
-1. 通过SEL去cache的哈希表中查找，如果没有
-2. 在当前类中查找，如果方法列表是排序好的，用二分法查找，如果未排序，遍历，如果没有
-3. 通过superclass，逐级查找，如果没有返回nil
-
-### 消息转发
+![message_forward](./iOS_interview_image/message_forward.png)
 
 1. +resolveInstanceMethod, 动态添加方法，消息会被重新发送。
 2. fast转发， 通过forwardingTargeForSelector给其他对象
 3. normal转发，先通过methodSignatureForSelector判断函数参数和返回值，然后通过forwardInvocation转发给目标对象。
 
-![message_forward](./iOS_interview_image/message_forward.png)
+### Method-Swizzling
+使用`exchangeImplementations`交换SEL所对应的IMP。
 
-
-
-### method-swizzling
-
-同一SEL，交换IMP。
-
-exchangeImplementations
-
-### 动态添加
-
-动态添加类
-
-objc_allocateClassPair
-
-往动态类里添加实例变量
-
-class_addIvar
-
-往动态类添加实例方法
-
-class_addMethod
-
-
+### 动态添加方法
+通过在消息转发resolveInstanceMethod使用`class_addMethod`添加动态方法。
 
 ### 动态方法解析
-
-@dynamic： 属性的setter与getter用户实现，不自动生成
-
-运行时语言
-
-编译时语言
-
-
+@dynamic： 将函数定义推迟到运行时。
 
 ### main之前？
 
@@ -636,8 +397,46 @@ class_addMethod
 3. 到可执行程序初始化，runtime对所有类初始化调用load，由于lazy bind机制，依赖库多数在使用时才初始化类结构
 4. 所有初始化结束，调用main
 
+## Block
 
+### 什么是block？
+结构体，同时可以截获变量。
+
+### 截获变量
+1. 局部变量：基本数据类型截获值，对象类型连同所有权修饰符截获。
+2. 静态局部变量：指针形式截获。
+3. 全局或静态全局变量：不截获。
+
+### __block修饰符
+__block修饰的变量变成对象, 地址被传入block，局部变量赋值需要__block修饰。
+
+__forwarding作用：
+使栈上的__forwarding和堆上的__forwarding都指向堆上的__block变量。
+
+![forwarding](./iOS_interview_image/block_forwarding.png)
+
+### block类型
+1. 栈
+2. 堆
+3. 全局
+
+对block作copy操作：
+1. Global，copy什么不做
+2. Stack， copy to heap
+3. Malloc, copy增加引用计数
+
+### block的循环引用
+解决循环引用两个方法：
+1. 手动断开
+2. weak
+3. 
 ## 多线程
+
+## 同步异步串行并行
+同步：不开启新的线程
+异步：可以开启新的线程，和当前任务同步执行
+串行：一个接着一个执行
+并行：同时执行
 
 ### GCD
 
@@ -1306,5 +1105,8 @@ JS通过Iframe，加载url，触发native webview代理，native调用api后回�
 ### ReactiveNative
 
 ## 参考
+
+[runtime源码]: ./iOS_interview_image/runtime.h
+
 [UI绘制原理1](https://leoliuyt.github.io/2018/05/26/UI绘制原理/)
 [UI绘制原理2](http://hchong.net/2019/05/11/iOS开发UI-UI绘制原理/)
