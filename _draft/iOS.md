@@ -54,11 +54,12 @@ title: iOS知识树
 		- [block类型](#block类型)
 		- [block的循环引用](#block的循环引用)
 	- [多线程](#多线程)
-	- [同步异步串行并行](#同步异步串行并行)
+		- [同步异步串行并行](#同步异步串行并行)
 		- [GCD](#gcd)
 		- [NSOperation](#nsoperation)
+			- [怎样控制状态？](#怎样控制状态)
 		- [NSThread](#nsthread)
-		- [多线程与锁](#多线程与锁)
+		- [锁](#锁)
 			- [多线程？](#多线程-1)
 			- [block?循环引用？](#block循环引用)
 		- [RunLoop](#runloop)
@@ -429,10 +430,10 @@ __forwarding作用：
 解决循环引用两个方法：
 1. 手动断开
 2. weak
-3. 
+
 ## 多线程
 
-## 同步异步串行并行
+### 同步异步串行并行
 同步：不开启新的线程
 异步：可以开启新的线程，和当前任务同步执行
 串行：一个接着一个执行
@@ -477,39 +478,33 @@ dispatch_barrier_async
  dispatch_group_async
 
 ### NSOperation
-
 基于GCD。
-
-优势特点：
-
+特点：
 1. 添加任务依赖
 2. 任务执行状态控制：isReady, isExecuting, isFinished, isCancelled
 3. 最大并发量
 
-怎样控制状态？
-
+#### 怎样控制状态？
 1. 如果只重写main方法，底层控制变更任务执行状态
 2. 如果重写了start方法，自行控制任务状态
 
-状态变更会用到KVO。
+状态变更会用到KVO,系统通过KVO移除已经完成的op。
 
 ### NSThread
+![thread](./iOS_interview_image/thread_process.png)
 
 用于实现常驻线程。
 
-![thread](./iOS_interview_image/thread_process.png)
+[源码][NSThread源码]
 
-### 多线程与锁
-
-锁：
-
+### 锁
 1. @synchronized: 创建单例对象使用
 2. atomic： 修饰属性关键字，保证赋值安全，不保证使用安全
 3. OSSpinLock：自旋锁，忙等，用于轻量级访问如int +1/-1
 4. NSRecursiveLock：递归锁，可以重复lock
 5. NSLock: 互斥锁
 6. dispatch_semaphore_t：信号量
-   1. dispatch_semaphore_create: 
+   1. dispatch_semaphore_create: 创建信号量
    2. dispatch_semaphore_wait: -1, 如果<0,当前线程主动阻塞
    3. dispatch_semaphore_signal：+1, 如果<=0, 被动唤醒，由释放的线程唤醒阻塞线程
 
@@ -1107,6 +1102,6 @@ JS通过Iframe，加载url，触发native webview代理，native调用api后回�
 ## 参考
 
 [runtime源码]: ./iOS_interview_image/runtime.h
-
+[NSThread源码]: ./iOS_interview_image/NSThread.m
 [UI绘制原理1](https://leoliuyt.github.io/2018/05/26/UI绘制原理/)
 [UI绘制原理2](http://hchong.net/2019/05/11/iOS开发UI-UI绘制原理/)
