@@ -56,18 +56,22 @@ title: iOS知识树
 	- [多线程](#多线程)
 		- [同步异步串行并行](#同步异步串行并行)
 		- [GCD](#gcd)
+			- [dispatch_semaphore_signal实现](#dispatch_semaphore_signal实现)
 		- [NSOperation](#nsoperation)
 			- [怎样控制状态？](#怎样控制状态)
 		- [NSThread](#nsthread)
 		- [锁](#锁)
-			- [多线程？](#多线程-1)
-			- [block?循环引用？](#block循环引用)
 		- [RunLoop](#runloop)
 			- [概念](#概念)
+			- [Event Loop](#event-loop)
+				- [用户态和内核态](#用户态和内核态)
 			- [数据结构](#数据结构)
-			- [(1)事件循环机制](#1事件循环机制)
-			- [RunLoop与NSTimer](#runloop与nstimer)
-			- [RunLoop与多线程](#runloop与多线程)
+			- [事件循环机制](#事件循环机制)
+			- [滑屏时如何保持Timer正常运行？](#滑屏时如何保持timer正常运行)
+			- [从点击图标启动程序，到程序被杀死，内部流程？](#从点击图标启动程序到程序被杀死内部流程)
+			- [如何实现一个常驻线程？](#如何实现一个常驻线程)
+			- [怎样保证子线程数据回来不影响用户滑动？](#怎样保证子线程数据回来不影响用户滑动)
+			- [卡顿检测？](#卡顿检测)
 	- [UI](#ui)
 		- [UIView vs CALayer](#uiview-vs-calayer)
 		- [点击事件是如何传递和响应？](#点击事件是如何传递和响应)
@@ -87,7 +91,7 @@ title: iOS知识树
 			- [get和post？](#get和post)
 	- [性能优化(Pending)](#性能优化pending)
 		- [电量优化？](#电量优化)
-	- [设计模式与架构](#设计模式与架构)
+	- [设计模式](#设计模式)
 			- [原则](#原则)
 		- [责任链](#责任链)
 		- [桥接](#桥接)
@@ -104,8 +108,9 @@ title: iOS知识树
 		- [外观](#外观)
 		- [模版](#模版)
 		- [装饰者](#装饰者)
-		- [架构](#架构)
-			- [图片缓存？](#图片缓存)
+	- [架构](#架构)
+		- [目的](#目的)
+		- [图片缓存](#图片缓存)
 			- [阅读时长统计？](#阅读时长统计)
 			- [MVVM？](#mvvm)
 			- [组件化？](#组件化)
@@ -441,6 +446,13 @@ __forwarding作用：
 
 ### GCD
 
+#### dispatch_semaphore_signal实现
+```
+dispatch_semaphore_signal {
+	S.value = S.value+1;
+	if S.value <=0 then wakeup(S.List);
+}
+```
 dispatch_set_target_queue: 1. 修改优先级 2. 创建层级结构。
 
 <img src="./iOS_interview_image/gcd_set_target_queue.png" alt="GCD" style="zoom:50%;" /> 
@@ -508,69 +520,52 @@ dispatch_barrier_async
    2. dispatch_semaphore_wait: -1, 如果<0,当前线程主动阻塞
    3. dispatch_semaphore_signal：+1, 如果<=0, 被动唤醒，由释放的线程唤醒阻塞线程
 
-#### 多线程？
-
-#### block?循环引用？
-
 ### RunLoop
 
 #### 概念
+内部维护Event Loop，用于处理事件/消息的对象。
 
-内部维护事件循环对事件/消息管理的对象。
+#### Event Loop
+没有消息休眠（用户态->内核态），有消息唤醒（内核态->用户态）。
+之所以可以休眠而不是死循环，是由于run会调用系统的mach_msg(), 把控制权给内核态。
+之所以唤醒，是由于mach_msg在一定条件(source1等), 会唤醒runloop，返回到用户态。
 
-事件循环： 没有消息休眠（用户态->内核态），有消息立刻唤醒（内核态->用户态）
-
-之所以可以休眠而不是死循环，是由于run会调用系统的mach_msg(), 切换到内核态，
-
-之所以唤醒，是由于mach_msg在一定条件(source1等), 会唤醒runloop，返回用户态
+##### 用户态和内核态
+用户态：应用程序运行的空间。
+内核态：操作系统运行的空间，可以操作各种硬件。
+从用户态切换到内核态的方式：
+1. 系统调用
+2. 内中断
+3. 外中断
 
 #### 数据结构
-
 1. CFRunLoop
-2. CFRunLoopMode
-3. souce/timer/observer: source0触摸事件，source1 port事件
+2. CFRunLoopMode：commonmode不是实际model，只是model的一个脏标记
+3. souce/timer/observer: source1可以唤醒runloop
 
-#### (1)事件循环机制
+[CFRunLoop源码](./iOS_interview_image/CFRunLoop.c)
 
+#### 事件循环机制
 ![process](./iOS_interview_image/runloop_process.png)
 
-#### RunLoop与NSTimer
+#### 滑屏时如何保持Timer正常运行？
+默认commonmode包含defaultmode和uitrackingmode， 所以只要通过CFRunLoopAddTimer把timer加入到commonmode里。
 
-苹果mode name:
-
-1. defaultmode
-2. uitrackingmode
-3. commonmode
-
-将defaultmode和uitrackingmode加入runloop的commonmode（系统预置），timer加入commonmodeitems，timer会自动同步到各个commonmode下，可以使timer在多个mode下运行。
-
-#### RunLoop与多线程
-
-1. 一一对应
-2. 主线程自动开启，非主线程手动开启
-
-
-
-点击图标，程序启动，运行，到程序被杀死，内部过程？
-
+#### 从点击图标启动程序，到程序被杀死，内部流程？
 1. runloop开启：main函数运行，内部会调用UIApplicationMain，在这里面会启动主线程的runloop
-2. runloop运行：经过一系列的处理，runloop休眠，如果这时我们点击主屏幕，会产生MachPort，然后转化成source1，把主线程唤醒，处理事件
-3. runloop结束：当程序被杀死，进入runloop的退出，observer会接收到通知，runloop关闭后，线程被销毁
+2. runloop休眠：经过一系列的处理后，runloop休眠，触发beforeWaiting，控制权从用户态转移到内核态
+3. runloop被唤醒：当用户点击图标，会触发外中断，产生一个port的source1，从内核态回到用户态，唤醒runloop，触发afterWaiting
+4. runloop结束：当程序被杀死，进入runloop的退出，触发Exit，runloop关闭，线程被销毁
 
-如何实现一个常驻线程？
-
-1. 为当前线程开启一个runloop
+#### 如何实现一个常驻线程？
+1. 为当前线程开启一个runloop: CFRunLoopGetCurrent
 2. 向runloop中添加一个port/source等维持runloop事件循环
-3. 启动runloop
+3. 启动runloop：CFRunLoopRunInMode
 
-runloop mode的作用？
+#### 怎样保证子线程数据回来不影响用户滑动？
+把更新UI数据放在defaultmode下。
 
-model主要用来指定事件在运行循环中的优先级。
-
-
-
-卡顿检测？
-
+#### 卡顿检测？
 添加observer到runloop的common mode，通过各个阶段的运行时间，判断卡顿位置。
 
 ## UI
@@ -759,7 +754,7 @@ charles抓包原理？
 4. 蓝牙陀螺仪等硬件：按需使用
 
 
-## 设计模式与架构
+## 设计模式
 
 #### 原则
 
@@ -892,54 +887,41 @@ class Single {
 
 通过装饰者动态给原有对象添加新的功能，装饰者和原有对象类型相同。
 
-### 架构
-
-目的
-
+## 架构
+### 目的
 1. 模块化
-
 2. 分层
-
 3. 解耦
-
 4. 降低代码重合度
 
-
-
-#### 图片缓存？
-
+### 图片缓存
 ![design layer](./iOS_interview_image/image_cache_design_layer.png)
 
 1. 内存读取，有，返回，没有
 2. 磁盘读取，有，存到内存，返回，没有
-3. 请求网络，存到内存，返回
-
-
+3. 请求网络，存到内存和磁盘，返回
 
 内存模块需要考虑：
-
 1. size：e.g 10kb * 100, 50kb * 20, 100kb * 10...
 2. 淘汰策略
    1. 队列，先进先出
-   2. LRU：可以在读写和前后台切换时check存在时间，超过多长时间未使用就删除
+   2. LRU：最近最少使用
+      1. 每次访问，如果命中，把数据移动到队尾，如果没有，删除队头，把新数据加入队尾
+      2. 定时检查或者在读写时前头台切换时清理很久没用的数据
 
 磁盘需要考虑：
-
 1. size
-2. 淘汰策略
+2. 淘汰策略，如清理很久没用的数据
 3. 存储方式
 
 网络需要考虑：
-
 1. 最大并发
 2. 超时策略
 3. 优先级
 
 图片解码需要考虑：可以用策略模式实现对不同种类的图片格式的解码。
 
-解码应该在图片从磁盘取出或网络返回后。
-
-
+解码应该在图片从磁盘取出或网络返回后。 
 
 #### 阅读时长统计？
 
