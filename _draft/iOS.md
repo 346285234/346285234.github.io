@@ -41,6 +41,7 @@ title: iOS知识树
 			- [如何检查内存问题？原理是什么？](#如何检查内存问题原理是什么)
 	- [Runtime](#runtime)
 		- [消息传递](#消息传递)
+		- [点击事件是如何传递和响应？](#点击事件是如何传递和响应)
 			- [以下代码，输出什么？](#以下代码输出什么)
 			- [消息转发](#消息转发)
 		- [Method-Swizzling](#method-swizzling)
@@ -73,14 +74,17 @@ title: iOS知识树
 			- [怎样保证子线程数据回来不影响用户滑动？](#怎样保证子线程数据回来不影响用户滑动)
 			- [卡顿检测？](#卡顿检测)
 	- [UI](#ui)
-		- [UIView vs CALayer](#uiview-vs-calayer)
-		- [点击事件是如何传递和响应？](#点击事件是如何传递和响应)
-		- [图像是如何显示？](#图像是如何显示)
-			- [CPU和GPU各做了什么？](#cpu和gpu各做了什么)
-			- [为什么会卡顿掉帧？](#为什么会卡顿掉帧)
+		- [图像显示原理](#图像显示原理)
+			- [CPU任务](#cpu任务)
+				- [绘制](#绘制)
+					- [异步绘制](#异步绘制)
+				- [model tree, presention tree和render tree](#model-tree-presention-tree和render-tree)
+			- [GPU任务](#gpu任务)
 			- [什么是离屏渲染？为什么会产生离屏渲染？](#什么是离屏渲染为什么会产生离屏渲染)
-			- [UIView绘制原理](#uiview绘制原理)
-			- [如何提高界面流畅度？](#如何提高界面流畅度)
+		- [卡顿](#卡顿)
+			- [什么是卡顿？](#什么是卡顿)
+			- [监控卡顿](#监控卡顿)
+			- [优化卡顿](#优化卡顿)
 	- [网络](#网络)
 		- [http协议](#http协议)
 		- [https与网络安全](#https与网络安全)
@@ -344,6 +348,10 @@ App启动后，苹果在主线程 RunLoop 里注册了两个 Observer
 
 ![message](./iOS_interview_image/message_send.png)
 
+### 点击事件是如何传递和响应？
+点击事件被UIApplication捕获，然后从UIWindow到UIView, 一层一层直到传递到最内层的UIView。通过hitTest和pointinside可以判断点是否在这个视图上，通过修改hidden、alpha、userinteractionisenable可以屏蔽视图传递。
+当事件传递到最内层后，通过判断当前视图UIResponse相关的touchbegin、touchmove、touchend是否响应，决定是否把事件交给父视图处理，如果都没有响应，则丢弃这个事件。
+
 1. 通过hash函数检查缓存是否命中
 2. 对于排序的方法列表，采用二分查找，对于未排序的，采用遍历。
 3. 检查父类是否命中，需要检查父类缓存和方法列表
@@ -570,38 +578,46 @@ dispatch_barrier_async
 
 ## UI
 
-### UIView vs CALayer
-UIView有一个layer成员，同时它继承自UIResponder.
-CALayer负责视图显示，UIView只负责事件的传递和响应，体现了单一职责原则。
-
-### 点击事件是如何传递和响应？
-点击事件被UIApplication捕获，然后从UIWindow到UIView, 一层一层直到传递到最内层的UIView。通过hitTest和pointinside可以判断点是否在这个视图上，通过修改hidden、alpha、userinteractionisenable可以屏蔽视图传递。
-当事件传递到最内层后，通过判断当前视图UIResponse相关的touchbegin、touchmove、touchend是否响应，决定是否把事件交给父视图处理，如果都没有响应，则丢弃这个事件。
-
-### 图像是如何显示？
-CPU从UIView中得到位图，通过总线传给GPU进行渲染，然后将结果保存在帧缓冲区。视频控制器根据垂直信号从帧缓冲区提取内容显示到显示器上。
-
+### 图像显示原理
 ![display](./iOS_interview_image/whole_display.png)
 
-#### CPU和GPU各做了什么？
-CPU的工作：
-1. layout：布局和文本计算
-2. display: 绘制
-3. prepare：图片编解码
-4. commit：提交位图
+1. CPU将视图和图层的层级关系打包，通过IPC提交给render server。
+2. render server将图层反序列化成presentation tree交给OpenGL ES和GPU进行渲染，然后将渲染结果保存在帧缓冲区。
+3. 视频控制器根据VSync从帧缓冲区提取内容显示到显示器。
 
-GPU的工作：
+#### CPU任务
+1. layout：计算frame
+2. display: 绘制，得到bitmap
+3. prepare：图片解码
+4. commit：提交视图到render server，递归提交subview的layers
+
+##### 绘制
+1. 使用图片：layer的contents存放bitmap
+2. 手动绘制
+   1. 调用view的drawRect
+   2. CALayer通过代理尝试调用displayLayer，直接设置contents
+   3. 如果没有实现displayLayer，CALayer尝试调用drawLayer，通过Core Graphics绘制bitmap存入contents.
+
+###### 异步绘制
+![draw](./iOS_interview_image/draw_principle.png)
+![async_draw](./iOS_interview_image/async_draw_process.png)
+
+当调用UIView的setneedsdisplay只是打上标记，display会在runloop下一个绘制周期被调用，如果实现了layer的displayLayer会触发异步绘制。
+
+##### model tree, presention tree和render tree
+model tree: 表示原始图层，可以在呈现图层调用modelLayer获取，其实返回的就是自己
+presentation tree：表示layer当前的状态，只有当图像显示后才被创建，通过调用CALayer的presentationLayer获取
+render tree：表示渲染后的结果
+
+通常，我们操作的是modelLayer, 在重绘结束，model tree的内容(层次结构，图层属性，动画)会被序列化，通过IPC传递给render server，render server会反序列化成presention tree，它是model tree的复制，但是它的属性值是当前的屏幕真正显示出来的值。
+当modelLayer带有动画，render server会根据动画修改presentationLayer的属性。presentationLayer经过渲染，转化成render layer显示出来。
+
+#### GPU任务
 1. 顶点着色
 2. 图元装配
 3. 光栅化
 4. 片段着色
 5. 片段处理
-
-![cpu&gpu](./iOS_interview_image/cpu_gpu_display.png)
-
-
-#### 为什么会卡顿掉帧？
-正常情况下每秒要显示60帧，每16.7ms会产生一个垂直信号，如果信号到来时，CPU和GPU不能将结果存入帧缓冲区，就会掉帧。
 
 #### 什么是离屏渲染？为什么会产生离屏渲染？
 GPU在当前屏幕缓冲区以外新开辟一块空间用于渲染就叫离屏渲染。当修改某些图层属性，未合成时不能显示，就会触发离屏渲染。
@@ -610,23 +626,14 @@ GPU在当前屏幕缓冲区以外新开辟一块空间用于渲染就叫离屏�
 3. 阴影
 4. 光栅化
 
-#### UIView绘制原理
-当调用UIView的setneedsdisplay只是打上标记，display会在runloop下一个绘制周期被调用，如果实现了layer的displayLayer会触发异步绘制。
+### 卡顿
 
-![draw](./iOS_interview_image/draw_principle.png)
+#### 什么是卡顿？
+正常情况下每秒要显示60帧，即每16.7ms会产生一个垂直信号，如果信号到来时，CPU和GPU不能将结果存入帧缓冲区，就会掉帧。
 
+#### 监控卡顿
 
-系统绘制流程
-
-![system](./iOS_interview_image/system_draw_process.png)
-
-(backing store 相当于bitmap）
-
-异步绘制流程
-
-![async_draw](./iOS_interview_image/async_draw_process.png)
-
-#### 如何提高界面流畅度？ 
+#### 优化卡顿
 1. 优化CPU
    1. 优化对象创建、调整、销毁
       1. 对于不涉及事件响应的控件，使用轻量的CALayer代替UIView
@@ -651,6 +658,7 @@ GPU在当前屏幕缓冲区以外新开辟一块空间用于渲染就叫离屏�
    3. 优化图形生成
       1. 为了防止离屏渲染，避免使用遮罩、圆角、阴影等
       2. 把需要显示的图形在后台线程绘制成图片
+
 
 ## 网络
 
