@@ -87,13 +87,21 @@ title: iOS知识树
 			- [优化卡顿](#优化卡顿)
 	- [网络](#网络)
 		- [http协议](#http协议)
+			- [什么是http协议](#什么是http协议)
+			- [请求消息和响应消息](#请求消息和响应消息)
+				- [请求方法](#请求方法)
+				- [消息头](#消息头)
+				- [状态码](#状态码)
+			- [Get vs Post](#get-vs-post)
+			- [http建立连接](#http建立连接)
+			- [http特点](#http特点)
 		- [https与网络安全](#https与网络安全)
 			- [tls](#tls)
 		- [tcp/udp](#tcpudp)
 		- [dns解析](#dns解析)
 		- [session/cookie](#sessioncookie)
 			- [get和post？](#get和post)
-	- [性能优化(Pending)](#性能优化pending)
+	- [App性能优化](#app性能优化)
 		- [电量优化？](#电量优化)
 	- [设计模式](#设计模式)
 			- [原则](#原则)
@@ -216,7 +224,7 @@ setValue:forKey
 5. 调用`setValue:forUndefinedKey`，默认抛异常。
 （类似方法是指: getKey, Key, isKey，类似实例变量是指：_key, _isKey, key, isKey）
 
-![kvc](./iOS_interview_image/kvc_process.png)
+![kvc](./iOS_images/kvc_process.png)
 
 ### 属性关键字
 
@@ -237,7 +245,7 @@ setValue:forKey
 1. 浅拷贝增加引用计数，指向同一块地址
 2. 深拷贝不会增加引用计数，指向新开辟的内容相同的内存空间
 
-![copy](./iOS_interview_image/copy_mutablecopy.png)
+![copy](./iOS_images/copy_mutablecopy.png)
 
 
 
@@ -268,15 +276,15 @@ type指针指向保存在静态空间的类对象，类对象保存方法。
 ## 内存
  
 ### 虚拟内存
-![memory](./iOS_interview_image/memory_layout.png)
+![memory](./iOS_images/memory_layout.png)
 
 ### NSObject数据结构
-![struct](./iOS_interview_image/runtime_struct.png)
+![struct](./iOS_images/runtime_struct.png)
 
 ### isa
 
 #### isa指向
-![class_metaclass](./iOS_interview_image/class_metaclass.png)
+![class_metaclass](./iOS_images/class_metaclass.png)
 
 #### isa类型
 1. TaggedPointer(适用于number等小对象， 没有isa，本身即是实际值+类型信息)
@@ -284,8 +292,8 @@ type指针指向保存在静态空间的类对象，类对象保存方法。
 3. 散列表（引用计数表和弱引用表）
 
 ##### NONPOINTER_ISA
-![nonpointer_isa](./iOS_interview_image/nonpointer_isa_address_1.png)
-![nonpointer](./iOS_interview_image/nonpointer_isa_address_2.png)
+![nonpointer_isa](./iOS_images/nonpointer_isa_address_1.png)
+![nonpointer](./iOS_images/nonpointer_isa_address_2.png)
 
 ##### 散列表
 sidetables：hash表，value为sidetable，通过对象指针的hash映射找到所属表。
@@ -296,10 +304,10 @@ sidetable包含：
 
 ###### 引用计数表
 hash表，value结构：
-![reference_table](./iOS_interview_image/reference_hash_map.png)
+![reference_table](./iOS_images/reference_hash_map.png)
 
 ###### 弱引用表
-![weak table](./iOS_interview_image/weak_reference_hashmap.png)
+![weak table](./iOS_images/weak_reference_hashmap.png)
 
 ### 引用计数
 
@@ -309,7 +317,7 @@ hash表，value结构：
 2. runtime使weak对象置为nil
 
 ##### ARC下的dealloc
-![dealloc](./iOS_interview_image/dealloc_process.png)
+![dealloc](./iOS_images/dealloc_process.png)
 
 在`object_dispose`清理weak表，关联对象等。
 
@@ -346,7 +354,7 @@ App启动后，苹果在主线程 RunLoop 里注册了两个 Observer
 
 ### 消息传递
 
-![message](./iOS_interview_image/message_send.png)
+![message](./iOS_images/message_send.png)
 
 ### 点击事件是如何传递和响应？
 点击事件被UIApplication捕获，然后从UIWindow到UIView, 一层一层直到传递到最内层的UIView。通过hitTest和pointinside可以判断点是否在这个视图上，通过修改hidden、alpha、userinteractionisenable可以屏蔽视图传递。
@@ -389,7 +397,7 @@ super只是从父类开始查，最后在NSObject中找到class方法，因为su
 
 #### 消息转发
 
-![message_forward](./iOS_interview_image/message_forward.png)
+![message_forward](./iOS_images/message_forward.png)
 
 1. +resolveInstanceMethod, 动态添加方法，消息会被重新发送。
 2. fast转发， 通过forwardingTargeForSelector给其他对象
@@ -427,7 +435,7 @@ __block修饰的变量变成对象, 地址被传入block，局部变量赋值需
 __forwarding作用：
 使栈上的__forwarding和堆上的__forwarding都指向堆上的__block变量。
 
-![forwarding](./iOS_interview_image/block_forwarding.png)
+![forwarding](./iOS_images/block_forwarding.png)
 
 ### block类型
 1. 栈
@@ -463,7 +471,7 @@ dispatch_semaphore_signal {
 ```
 dispatch_set_target_queue: 1. 修改优先级 2. 创建层级结构。
 
-<img src="./iOS_interview_image/gcd_set_target_queue.png" alt="GCD" style="zoom:50%;" /> 
+<img src="./iOS_images/gcd_set_target_queue.png" alt="GCD" style="zoom:50%;" /> 
 
 dispatch_after: 到时间block被加入queue， 另外timer基于runloop，所以会有runloop没开不运行，mode不对不运行等问题，after则没有这些问题。
 
@@ -511,7 +519,7 @@ dispatch_barrier_async
 状态变更会用到KVO,系统通过KVO移除已经完成的op。
 
 ### NSThread
-![thread](./iOS_interview_image/thread_process.png)
+![thread](./iOS_images/thread_process.png)
 
 用于实现常驻线程。
 
@@ -551,10 +559,10 @@ dispatch_barrier_async
 2. CFRunLoopMode：commonmode不是实际model，只是model的一个脏标记
 3. souce/timer/observer: source1可以唤醒runloop
 
-[CFRunLoop源码](./iOS_interview_image/CFRunLoop.c)
+[CFRunLoop源码](./iOS_images/CFRunLoop.c)
 
 #### 事件循环机制
-![process](./iOS_interview_image/runloop_process.png)
+![process](./iOS_images/runloop_process.png)
 
 #### 滑屏时如何保持Timer正常运行？
 默认commonmode包含defaultmode和uitrackingmode， 所以只要通过CFRunLoopAddTimer把timer加入到commonmode里。
@@ -579,7 +587,7 @@ dispatch_barrier_async
 ## UI
 
 ### 图像显示原理
-![display](./iOS_interview_image/whole_display.png)
+![display](./iOS_images/whole_display.png)
 
 1. CPU将视图和图层的层级关系打包，通过IPC提交给render server。
 2. render server将图层反序列化成presentation tree交给OpenGL ES和GPU进行渲染，然后将渲染结果保存在帧缓冲区。
@@ -599,8 +607,8 @@ dispatch_barrier_async
    3. 如果没有实现displayLayer，CALayer尝试调用drawLayer，通过Core Graphics绘制bitmap存入contents.
 
 ###### 异步绘制
-![draw](./iOS_interview_image/draw_principle.png)
-![async_draw](./iOS_interview_image/async_draw_process.png)
+![draw](./iOS_images/draw_principle.png)
+![async_draw](./iOS_images/async_draw_process.png)
 
 当调用UIView的setneedsdisplay只是打上标记，display会在runloop下一个绘制周期被调用，如果实现了layer的displayLayer会触发异步绘制。
 
@@ -664,29 +672,33 @@ GPU在当前屏幕缓冲区以外新开辟一块空间用于渲染就叫离屏�
 
 ### http协议
 
-request和reponse格式
+#### 什么是http协议
+http协议定义了客户端和服务器的交互方式。客户端发送请求消息，服务器解析请求，返回响应消息。
 
-1. request: 请求行， 消息头， 消息体
-2. response：状态行，消息头，消息体
+#### 请求消息和响应消息
+![request and response](./iOS_images/http_request_response.png)
 
-request类型：get, post, head, put, delete, options
+##### 请求方法
+![request method](./iOS_images/http_request_method.png)
 
-get vs post
+##### 消息头
+![http header](./iOS_images/http_header1.png)
+![http header](./iOS_images/http_header2.png)
+![http header](./iOS_images/http_header3.png)
 
-1. get用于获取资源，post用于处理资源
-2. get请求参数在url，post在body
-3. get参数有限制，post没有限制
-4. get请求不安全，post安全
+##### 状态码
+![statuscode](./iOS_images/response_statuscode.png)
 
-状态码
+#### Get vs Post 
+Get: 获取资源
+安全(不引起server变化)，幂等（多次执行和一次执行效果相同），可缓存
+Post：处理资源
+不安全，不幂等，不可缓存
 
-![statuscode](./iOS_interview_image/response_statuscode.png)
+#### http建立连接
+![http_connect](./iOS_images/http_process.png)
 
-建立连接
-
-![http_connect](./iOS_interview_image/http_process.png)
-
-http特点
+#### http特点
 
 1. 无连接 -> http持久连接，头部字段：（Connection： keep-alive, time: 20(多少时间), max: 10（多少条请求）)
 2. 无状态 -> Cookie/Session
@@ -700,7 +712,7 @@ https = http + tls
 1. 会话密钥是通过三个随机数合成。
 2. 通过服务器的公钥加密客户端生成的第三个随机数，保证了安全性。
 具体流程：
-![https_process](./iOS_interview_image/https_process.png)
+![https_process](./iOS_images/https_process.png)
 
 
 
@@ -752,7 +764,7 @@ charles抓包原理？
 
 中间人攻击。
 
-## 性能优化(Pending)
+## App性能优化
 
 ### 电量优化？
 
@@ -903,7 +915,7 @@ class Single {
 4. 降低代码重合度
 
 ### 图片缓存
-![design layer](./iOS_interview_image/image_cache_design_layer.png)
+![design layer](./iOS_images/image_cache_design_layer.png)
 
 1. 内存读取，有，返回，没有
 2. 磁盘读取，有，存到内存，返回，没有
@@ -933,7 +945,7 @@ class Single {
 
 #### 阅读时长统计？
 
-![readtime](./iOS_interview_image/readtime_design.png)
+![readtime](./iOS_images/readtime_design.png)
 
 为什么有不同记录器？适配不同场景。
 
@@ -956,11 +968,11 @@ view（view和viewcontroller）只和viewmodel交互，view包含viewmodel强引
 
 RN原理？
 
-![RN](./iOS_interview_image/RN_principle.png)
+![RN](./iOS_images/RN_principle.png)
 
 客户端整体架构？
 
-![client](./iOS_interview_image/client_design_layer.png)
+![client](./iOS_images/client_design_layer.png)
 
 中间层用于解耦业务逻辑。
 
@@ -1091,7 +1103,7 @@ JS通过Iframe，加载url，触发native webview代理，native调用api后回�
 
 ## 参考
 
-[runtime源码]: ./iOS_interview_image/runtime.h
-[NSThread源码]: ./iOS_interview_image/NSThread.m
+[runtime源码]: ./iOS_images/runtime.h
+[NSThread源码]: ./iOS_images/NSThread.m
 [UI绘制原理1](https://leoliuyt.github.io/2018/05/26/UI绘制原理/)
 [UI绘制原理2](http://hchong.net/2019/05/11/iOS开发UI-UI绘制原理/)
