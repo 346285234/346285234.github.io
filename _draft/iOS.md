@@ -102,6 +102,13 @@ title: iOS知识树
 		- [session/cookie](#sessioncookie)
 			- [get和post？](#get和post)
 	- [App性能优化](#app性能优化)
+		- [冷启动优化](#冷启动优化)
+			- [T1](#t1)
+				- [优化方案](#优化方案)
+			- [T2](#t2)
+				- [优化方案](#优化方案-1)
+			- [T3](#t3)
+				- [优化方案](#优化方案-2)
 		- [电量优化？](#电量优化)
 	- [设计模式](#设计模式)
 			- [原则](#原则)
@@ -765,6 +772,30 @@ charles抓包原理？
 中间人攻击。
 
 ## App性能优化
+
+### 冷启动优化
+![launch process](./iOS_images/launch_process.png)
+
+另外可以把`didFinishLaunchingWithOptions`到展示第一个页面的过程定义为T3，有冷启动=T1+T2+T3.
+
+#### T1
+![before main](./iOS_images/before_main.png)
+![before main](./iOS_images/dyld_work.png)
+
+##### 优化方案
+1. 代码瘦身：把无用的代码去掉
+2. 优化load：尽可能延迟操作
+
+#### T2
+可以通过Time Profile观察堆栈和相应的执行时间。
+
+##### 优化方案
+1. 延迟操作和优化耗时操作
+
+#### T3
+##### 优化方案
+1. 使用缓存
+2. 延迟操作
 
 ### 电量优化？
 
