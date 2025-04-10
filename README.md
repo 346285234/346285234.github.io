@@ -9,9 +9,9 @@
    bundle exec jekyll serve
    ```
 
-## How to write new artiles
+## How to add a new artile
 
-1. move markdown files to posts folder, and rename the file name with date.
+1. move markdown file to posts folder, and rename the file name with date.
 2. move image files to images folder, adjust the markdown file to show image corretly.
 
 ## Reference
